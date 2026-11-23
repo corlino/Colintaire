@@ -1,7 +1,7 @@
 /**
  * npm run assets — turns the owner's PNGs in art/ into optimised files (TAD §12.5).
  *
- *   art/themes/<id>/background.png        → public/art/themes/<id>/background.webp  (+ preview.webp)
+ *   art/themes/<id>/background.png        → public/art/themes/<id>/background.webp
  *   art/themes/<id>/background-wide.png   → public/art/themes/<id>/background-wide.webp   (optional)
  *   art/card-backs/<id>/back.png          → public/art/card-backs/<id>/back.webp
  *   art/card-faces/<set>/S01.png … D13.png → public/art/card-faces/<set>/S01.webp …   (all 52 required)
@@ -24,7 +24,6 @@ const FACE_IDS = SUITS.flatMap((s) => Array.from({ length: 13 }, (_, i) => `${s}
 export const SIZES = {
   background: { width: 1290, height: 2796 },
   backgroundWide: { width: 2560, height: 1440 },
-  preview: 128,
   card: { width: 300, height: 420 },
 };
 
@@ -59,8 +58,7 @@ export async function buildAssets({ artDir = 'art', publicDir = 'public', manife
     mkdirSync(dir, { recursive: true });
     await checkSize(src, SIZES.background, warnings);
     await webp(src, join(dir, 'background.webp'), SIZES.background, 78);
-    await webp(src, join(dir, 'preview.webp'), { width: SIZES.preview, height: SIZES.preview });
-    const entry = { background: `/art/themes/${id}/background.webp`, preview: `/art/themes/${id}/preview.webp` };
+    const entry = { background: `/art/themes/${id}/background.webp` };
     const wide = join(artDir, 'themes', id, 'background-wide.png');
     if (existsSync(wide)) {
       await checkSize(wide, SIZES.backgroundWide, warnings);
@@ -106,7 +104,6 @@ export async function buildAssets({ artDir = 'art', publicDir = 'public', manife
 export interface GeneratedTheme {
   readonly background: string;
   readonly backgroundWide?: string;
-  readonly preview: string;
 }
 
 export const GENERATED: {

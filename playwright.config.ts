@@ -6,6 +6,8 @@ export default defineConfig({
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
+  // Screenshot baselines are recorded on macOS; Linux CI renders fonts differently, so it skips the comparison.
+  ignoreSnapshots: !!process.env.CI,
   use: { baseURL: 'http://localhost:5174', trace: 'retain-on-failure' },
   webServer: {
     command: 'npx vite --port 5174 --strictPort',

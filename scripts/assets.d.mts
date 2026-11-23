@@ -1,12 +1,11 @@
 export interface GeneratedManifest {
-  themes: Record<string, { background: string; backgroundWide?: string; preview: string }>;
+  themes: Record<string, { background: string; backgroundWide?: string }>;
   cardBacks: Record<string, string>;
   cardFaces: Record<string, Record<string, string>>;
 }
 export const SIZES: {
   background: { width: number; height: number };
   backgroundWide: { width: number; height: number };
-  preview: number;
   card: { width: number; height: number };
 };
 export function buildAssets(opts?: {

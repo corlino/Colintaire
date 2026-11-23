@@ -18,6 +18,7 @@ import {
   pickDropTarget,
   pileAtPoint,
 } from './boardInput';
+import { CroppedPreview, PREVIEW_ASPECT } from './CroppedPreview';
 import { CardFace, cardLabel, CardView, MOTION, type CardSize, type Jump } from './CardView';
 import { pileName } from './format';
 import { ControlButton } from './controls';
@@ -494,7 +495,7 @@ export function Board({ metrics }: { metrics: Metrics }) {
       )}
 
       <ControlButton label="Appearance" onClick={() => useGameStore.getState().openModal('appearance')} style={{ ...box(slots.appearance), zIndex: 400 }}>
-        <span className="block size-7 rounded-full ring-1 ring-white/40" style={{ background: theme.preview }} aria-hidden="true" />
+        <CroppedPreview aspect={PREVIEW_ASPECT.theme} background={theme.preview} className="size-7 ring-1 ring-white/40" />
       </ControlButton>
       <ControlButton
         label="Undo"

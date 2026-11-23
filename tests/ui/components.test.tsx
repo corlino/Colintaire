@@ -5,11 +5,13 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { newGame } from '../../src/engine';
 import { computeMetrics } from '../../src/layout';
 import { useGameStore } from '../../src/store/gameStore';
+import { CARD_BACKS, THEMES } from '../../src/assets/registry';
+import { App } from '../../src/ui/App';
 import { Board } from '../../src/ui/Board';
 import { formatTime, formatVegas } from '../../src/ui/format';
 import { AppearanceModal } from '../../src/ui/modals/AppearanceModal';
 import { NewGameModal } from '../../src/ui/modals/NewGameModal';
-import { StatsPanel } from '../../src/ui/StatsPanel';
+import { StatsPanel, statValueClass } from '../../src/ui/StatsPanel';
 import { cs, stateWith } from '../helpers';
 
 const store = () => useGameStore.getState();
@@ -40,6 +42,16 @@ describe('StatsPanel (Style Guide 6.4)', () => {
     expect(screen.getByRole('group', { name: 'Time 3:21' })).toBeInTheDocument();
     act(() => store().startNewGame('vegas'));
     expect(screen.getByRole('group', { name: 'Score −$52' })).toBeInTheDocument();
+  });
+});
+
+describe('stat value sizing', () => {
+  it('steps the font down for longer values instead of truncating', () => {
+    expect(statValueClass('−$52')).toBe('text-stat-value');
+    expect(statValueClass('10:23')).toBe('text-stat-value');
+    expect(statValueClass('−$104')).toBe('text-stat-value');
+    expect(statValueClass('−$1040')).toBe('text-stat-value-md');
+    expect(statValueClass('1:02:05')).toBe('text-stat-value-sm');
   });
 });
 
@@ -151,5 +163,28 @@ describe('keyboard and screen-reader play (desktop, TAD §13)', () => {
     render(<Board metrics={computeMetrics(343, 560)} />);
     key(screen.getByRole('button', { name: /^Stock, 1 card\./ }), 'Enter');
     expect(screen.getByTestId('announcer')).toHaveTextContent('Drew 5 of clubs');
+  });
+});
+
+describe('themes and card backs (AC 24–26)', () => {
+  it('a theme only sets the background variables; fonts and controls are untouched', () => {
+    globalThis.ResizeObserver ??= class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    } as unknown as typeof ResizeObserver;
+    const root = document.documentElement.style;
+    for (const p of [...root]) root.removeProperty(p);
+    render(<App />);
+    const props = [...root].sort();
+    expect(props).toEqual(['--app-bg-image', '--app-bg-image-wide', '--app-bg-scrim']);
+    expect(root.getPropertyValue('--app-bg-image')).toBe(THEMES[0]!.background);
+  });
+
+  it('face-down cards use the selected card back', () => {
+    const { container } = render(<Board metrics={computeMetrics(343, 560)} />);
+    const backs = [...container.querySelectorAll('[data-card] img')].map((img) => img.getAttribute('src'));
+    expect(backs.length).toBeGreaterThan(0);
+    expect(new Set(backs)).toEqual(new Set([CARD_BACKS[0]!.src]));
   });
 });

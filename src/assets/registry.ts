@@ -19,7 +19,7 @@ export interface ThemeAsset {
   readonly backgroundWide?: string;
   /** Darkening layer over the background so cards stay readable. */
   readonly scrim: string;
-  /** CSS background for the circular preview swatch. */
+  /** CSS background for previews. Painted into a portrait screen-shaped box, then centre-cropped to a circle. */
   readonly preview: string;
 }
 
@@ -86,7 +86,7 @@ export function withArt(
     scrim: prev?.scrim ?? DEFAULT_SCRIM,
     background: url(g.background),
     ...(g.backgroundWide ? { backgroundWide: url(g.backgroundWide) } : {}),
-    preview: `center / cover no-repeat ${url(g.preview)}`,
+    preview: `center / cover no-repeat ${url(g.background)}`,
   });
   const themes = base.themes.map((t) => (gen.themes[t.id] ? themeFrom(t.id, gen.themes[t.id]!, t) : t));
   for (const [id, g] of Object.entries(gen.themes)) if (!themes.some((t) => t.id === id)) themes.push(themeFrom(id, g));

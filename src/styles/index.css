@@ -70,12 +70,23 @@
   font-weight: 600;
 }
 @utility text-stat-label {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 400;
   color: var(--color-text-secondary);
 }
 @utility text-stat-value {
-  font-size: 22px;
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+/* Longer values (−$104, 1:02:05) step down so they never truncate. */
+@utility text-stat-value-md {
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+@utility text-stat-value-sm {
+  font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }

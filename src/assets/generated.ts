@@ -2,7 +2,6 @@
 export interface GeneratedTheme {
   readonly background: string;
   readonly backgroundWide?: string;
-  readonly preview: string;
 }
 
 export const GENERATED: {

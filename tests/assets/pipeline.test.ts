@@ -41,15 +41,12 @@ describe('npm run assets (TAD §12.5)', () => {
     expect([bg.format, bg.width, bg.height]).toEqual(['webp', SIZES.background.width, SIZES.background.height]);
     const back = await sharp(join(root, 'public/art/card-backs/teal-geometric/back.webp')).metadata();
     expect([back.width, back.height]).toEqual([SIZES.card.width, SIZES.card.height]);
-    const preview = await sharp(join(root, 'public/art/themes/deep-sea/preview.webp')).metadata();
-    expect([preview.width, preview.height]).toEqual([SIZES.preview, SIZES.preview]);
     expect(existsSync(join(root, 'public/icons/apple-touch-icon.png'))).toBe(true);
   });
 
   it('lists what it built and warns about wrong sizes and incomplete face sets', () => {
     expect(result.manifest.themes['nebula-dusk']).toEqual({
       background: '/art/themes/nebula-dusk/background.webp',
-      preview: '/art/themes/nebula-dusk/preview.webp',
       backgroundWide: '/art/themes/nebula-dusk/background-wide.webp',
     });
     expect(result.manifest.cardBacks).toEqual({ 'teal-geometric': '/art/card-backs/teal-geometric/back.webp' });
@@ -64,6 +61,7 @@ describe('npm run assets (TAD §12.5)', () => {
     expect(r.themes.map((t) => t.name)).toEqual(['Nebula Dusk', 'Deep Sea']);
     expect(r.themes[0]!.background).toBe('url("/art/themes/nebula-dusk/background.webp")');
     expect(r.themes[0]!.backgroundWide).toBe('url("/art/themes/nebula-dusk/background-wide.webp")');
+    expect(r.themes[0]!.preview).toBe('center / cover no-repeat url("/art/themes/nebula-dusk/background.webp")');
     expect(r.themes[0]!.scrim).toBe(THEMES[0]!.scrim);
     expect(r.backs[0]!.src).toBe('/art/card-backs/teal-geometric/back.webp');
     expect(r.faces[0]).toMatchObject({ id: 'classic', kind: 'images' });

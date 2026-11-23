@@ -5,13 +5,20 @@ import { useGameStore } from '../store/gameStore';
 import { vegasBalance } from '../store/session';
 import { formatTime, formatVegas } from './format';
 
+/** Font step for a value: 5 characters fit at full size in the narrowest (iPhone SE) panel. */
+export function statValueClass(value: string): string {
+  if (value.length <= 5) return 'text-stat-value';
+  if (value.length === 6) return 'text-stat-value-md';
+  return 'text-stat-value-sm';
+}
+
 function Stat({ label, icon: Icon, value }: { label: string; icon: ComponentType<SVGProps<SVGSVGElement>>; value: string }) {
   return (
-    <div className="flex min-w-0 flex-1 flex-col justify-center rounded-sm bg-black px-md" role="group" aria-label={`${label} ${value}`}>
+    <div className="flex min-w-0 flex-1 flex-col justify-center rounded-sm bg-black px-sm min-[400px]:px-md" role="group" aria-label={`${label} ${value}`}>
       <span className="text-stat-label leading-tight">{label}</span>
-      <span className="flex items-center gap-sm leading-tight">
-        <Icon className="size-5 shrink-0 text-text-secondary" strokeWidth={1.5} aria-hidden="true" />
-        <span className="text-stat-value truncate">{value}</span>
+      <span className="flex h-6 items-center gap-xs leading-tight">
+        <Icon className="size-4.5 shrink-0 text-text-secondary" strokeWidth={1.5} aria-hidden="true" />
+        <span className={`${statValueClass(value)} truncate`}>{value}</span>
       </span>
     </div>
   );

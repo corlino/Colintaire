@@ -1,9 +1,10 @@
 import { CARD_BACKS, DEFAULTS, pick, THEMES } from '../../assets/registry';
 import { useGameStore } from '../../store/gameStore';
+import { CroppedPreview, PREVIEW_ASPECT } from '../CroppedPreview';
 import { ModalShell } from './ModalShell';
 
 /** Circular swatch with a 2 px white ring and 3 px gap when selected (TAD §12.4). */
-function Swatch({ label, selected, background, onSelect }: { label: string; selected: boolean; background: string; onSelect: () => void }) {
+function Swatch({ label, selected, onSelect, children }: { label: string; selected: boolean; onSelect: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
@@ -15,7 +16,7 @@ function Swatch({ label, selected, background, onSelect }: { label: string; sele
         selected ? 'ring-2 ring-white' : ''
       }`}
     >
-      <span className="block size-full rounded-full" style={{ background, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+      {children}
     </button>
   );
 }
@@ -36,7 +37,9 @@ export function AppearanceModal() {
         <h3 className="text-section">Interface Theme</h3>
         <div role="radiogroup" aria-label="Interface Theme" className="flex flex-wrap justify-center gap-xl">
           {THEMES.map((t) => (
-            <Swatch key={t.id} label={t.name} selected={t.id === theme.id} background={t.preview} onSelect={() => setTheme(t.id)} />
+            <Swatch key={t.id} label={t.name} selected={t.id === theme.id} onSelect={() => setTheme(t.id)}>
+              <CroppedPreview aspect={PREVIEW_ASPECT.theme} background={t.preview} className="size-full" />
+            </Swatch>
           ))}
         </div>
       </section>
@@ -44,7 +47,9 @@ export function AppearanceModal() {
         <h3 className="text-section">Card Style</h3>
         <div role="radiogroup" aria-label="Card Style" className="flex flex-wrap justify-center gap-xl">
           {CARD_BACKS.map((b) => (
-            <Swatch key={b.id} label={b.name} selected={b.id === back.id} background={`url("${b.src}")`} onSelect={() => setCardBack(b.id)} />
+            <Swatch key={b.id} label={b.name} selected={b.id === back.id} onSelect={() => setCardBack(b.id)}>
+              <CroppedPreview aspect={PREVIEW_ASPECT.card} src={b.src} className="size-full" />
+            </Swatch>
           ))}
         </div>
       </section>
