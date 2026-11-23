@@ -48,7 +48,7 @@ export function AppearanceModal() {
           ))}
         </div>
       </section>
-      <p className="mt-auto pt-2xl text-center text-xs text-text-muted">{__APP_VERSION__}</p>
+      <p className="mt-auto pt-2xl text-center text-xs text-text-muted" data-testid="app-version">{__APP_VERSION__}</p>
     </ModalShell>
   );
 }

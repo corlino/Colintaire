@@ -36,6 +36,7 @@ function useThemeBackground() {
     const root = document.documentElement.style;
     root.setProperty('--app-bg-image', theme.background);
     root.setProperty('--app-bg-scrim', theme.scrim);
+    root.setProperty('--app-bg-image-wide', theme.backgroundWide ?? theme.background);
   }, [themeId]);
 }
 

@@ -1,3 +1,6 @@
+import { FOUNDATION_SUITS } from '../engine/constants';
+import type { PileRef } from '../engine/types';
+
 /** Vegas balance: "$51", "−$52" with a true minus sign (decision U16). */
 export function formatVegas(amount: number): string {
   const abs = Math.abs(amount);
@@ -19,3 +22,10 @@ export const RANK_LABEL: Record<number, string> = {
 export const rankLabel = (rank: number) => RANK_LABEL[rank] ?? String(rank);
 
 export const SUIT_NAME = { S: 'spades', H: 'hearts', C: 'clubs', D: 'diamonds' } as const;
+
+/** Spoken names for piles (screen readers and keyboard play). */
+export function pileName(ref: PileRef): string {
+  if (ref.kind === 'tableau') return `pile ${ref.index + 1}`;
+  if (ref.kind === 'foundation') return `${SUIT_NAME[FOUNDATION_SUITS[ref.index]!]} foundation`;
+  return ref.kind;
+}

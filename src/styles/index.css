@@ -111,10 +111,30 @@ body {
   padding-top: env(safe-area-inset-top);
   padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
 }
+/* Wide windows use the landscape background when the theme has one (TAD §12.5). */
+@media (min-aspect-ratio: 1/1) {
+  .app-shell {
+    background-image: linear-gradient(var(--app-bg-scrim, transparent), var(--app-bg-scrim, transparent)),
+      var(--app-bg-image-wide, var(--app-bg-image, none));
+  }
+}
 
 .card,
 .control {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
+}
+
+/* Desktop (TAD §13): pointer cursor on anything tappable, a visible 2 px white focus ring for keyboard users. */
+@layer base {
+  button:not(:disabled),
+  [role='button'],
+  [role='radio'] {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-text-primary);
+    outline-offset: 2px;
+  }
 }

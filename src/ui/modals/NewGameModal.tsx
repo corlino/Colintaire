@@ -22,7 +22,7 @@ function ModeSelector({ value, onChange }: { value: GameMode; onChange: (m: Game
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(mode)}
-            className={`flex-1 rounded-md py-md text-button transition-colors duration-(--duration-fast) focus-visible:outline-2 focus-visible:outline-white ${
+            className={`flex-1 rounded-md py-md text-button transition-colors duration-(--duration-fast) motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-white ${
               selected ? 'bg-surface-elevated text-text-primary' : 'text-text-secondary'
             }`}
           >

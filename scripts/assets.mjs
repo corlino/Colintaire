@@ -1,54 +1,166 @@
 /**
- * npm run assets — builds optimised app icons in public/icons (TAD §12.5).
- * Source: art/icons/icon-1024.png when the owner has supplied it; otherwise a
- * placeholder made from the Teal Geometric card back centred on #101010.
- * M6 extends this script with backgrounds and card backs.
+ * npm run assets — turns the owner's PNGs in art/ into optimised files (TAD §12.5).
+ *
+ *   art/themes/<id>/background.png        → public/art/themes/<id>/background.webp  (+ preview.webp)
+ *   art/themes/<id>/background-wide.png   → public/art/themes/<id>/background-wide.webp   (optional)
+ *   art/card-backs/<id>/back.png          → public/art/card-backs/<id>/back.webp
+ *   art/card-faces/<set>/S01.png … D13.png → public/art/card-faces/<set>/S01.webp …   (all 52 required)
+ *   art/icons/icon-1024.png               → public/icons/*.png   (placeholder from the card back otherwise)
+ *
+ * It also writes src/assets/generated.ts, which the registry reads: a theme or
+ * card back that has art uses it, and a new folder appears in Appearance on its own.
+ * Never put raw PNGs straight into public/.
  */
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 const BG = '#101010';
-const OUT = 'public/icons';
-const SUPPLIED = 'art/icons/icon-1024.png';
-mkdirSync(OUT, { recursive: true });
+const SUITS = ['S', 'H', 'C', 'D'];
+const FACE_IDS = SUITS.flatMap((s) => Array.from({ length: 13 }, (_, i) => `${s}${String(i + 1).padStart(2, '0')}`));
 
-/** A 1024 px square master. `inset` is the share of the canvas the artwork may use. */
-async function master(inset) {
-  if (existsSync(SUPPLIED)) {
-    const size = Math.round(1024 * inset);
-    const art = await sharp(SUPPLIED).resize(size, size).toBuffer();
+/** Output sizes. Cards: ~90 CSS px wide at most × 3 DPR. Backgrounds: iPhone Pro Max at 3×. */
+export const SIZES = {
+  background: { width: 1290, height: 2796 },
+  backgroundWide: { width: 2560, height: 1440 },
+  preview: 128,
+  card: { width: 300, height: 420 },
+};
+
+const subdirs = (dir) =>
+  existsSync(dir)
+    ? readdirSync(dir, { withFileTypes: true })
+        .filter((d) => d.isDirectory() && !d.name.startsWith('.'))
+        .map((d) => d.name)
+        .sort()
+    : [];
+
+async function webp(src, dest, resize, quality = 82) {
+  await sharp(src).rotate().resize({ ...resize, fit: 'cover', position: 'centre' }).webp({ quality }).toFile(dest);
+}
+
+async function checkSize(src, want, warnings) {
+  const { width, height } = await sharp(src).metadata();
+  if (width !== want.width || height !== want.height) warnings.push(`${src} is ${width}×${height}; expected ${want.width}×${want.height}. It will be cropped to fit.`);
+}
+
+/** Build everything. Paths are parameters so tests can run against fixtures. */
+export async function buildAssets({ artDir = 'art', publicDir = 'public', manifestPath = 'src/assets/generated.ts', iconSource = 'src/assets/placeholders/teal-geometric.svg', log = console.log } = {}) {
+  const warnings = [];
+  const out = { themes: {}, cardBacks: {}, cardFaces: {} };
+  const artOut = join(publicDir, 'art');
+  rmSync(artOut, { recursive: true, force: true }); // no stale files from removed art
+
+  for (const id of subdirs(join(artDir, 'themes'))) {
+    const src = join(artDir, 'themes', id, 'background.png');
+    if (!existsSync(src)) continue;
+    const dir = join(artOut, 'themes', id);
+    mkdirSync(dir, { recursive: true });
+    await checkSize(src, SIZES.background, warnings);
+    await webp(src, join(dir, 'background.webp'), SIZES.background, 78);
+    await webp(src, join(dir, 'preview.webp'), { width: SIZES.preview, height: SIZES.preview });
+    const entry = { background: `/art/themes/${id}/background.webp`, preview: `/art/themes/${id}/preview.webp` };
+    const wide = join(artDir, 'themes', id, 'background-wide.png');
+    if (existsSync(wide)) {
+      await checkSize(wide, SIZES.backgroundWide, warnings);
+      await webp(wide, join(dir, 'background-wide.webp'), SIZES.backgroundWide, 78);
+      entry.backgroundWide = `/art/themes/${id}/background-wide.webp`;
+    }
+    out.themes[id] = entry;
+    log(`theme ${id}`);
+  }
+
+  for (const id of subdirs(join(artDir, 'card-backs'))) {
+    const src = join(artDir, 'card-backs', id, 'back.png');
+    if (!existsSync(src)) continue;
+    const dir = join(artOut, 'card-backs', id);
+    mkdirSync(dir, { recursive: true });
+    await checkSize(src, { width: 750, height: 1050 }, warnings);
+    await webp(src, join(dir, 'back.webp'), SIZES.card, 85);
+    out.cardBacks[id] = `/art/card-backs/${id}/back.webp`;
+    log(`card back ${id}`);
+  }
+
+  for (const id of subdirs(join(artDir, 'card-faces'))) {
+    const srcDir = join(artDir, 'card-faces', id);
+    const missing = FACE_IDS.filter((f) => !existsSync(join(srcDir, `${f}.png`)));
+    if (missing.length > 0) {
+      warnings.push(`card faces "${id}" skipped: missing ${missing.length} of 52 (${missing.slice(0, 4).join(', ')}${missing.length > 4 ? ', …' : ''}).`);
+      continue;
+    }
+    const dir = join(artOut, 'card-faces', id);
+    mkdirSync(dir, { recursive: true });
+    const images = {};
+    for (const f of FACE_IDS) {
+      await webp(join(srcDir, `${f}.png`), join(dir, `${f}.webp`), SIZES.card, 85);
+      images[f] = `/art/card-faces/${id}/${f}.webp`;
+    }
+    out.cardFaces[id] = images;
+    log(`card faces ${id}`);
+  }
+
+  await buildIcons({ artDir, publicDir, iconSource, log });
+
+  const body = `/* Generated by \`npm run assets\` — do not edit. Lists the optimised art in public/art. */
+export interface GeneratedTheme {
+  readonly background: string;
+  readonly backgroundWide?: string;
+  readonly preview: string;
+}
+
+export const GENERATED: {
+  readonly themes: Readonly<Record<string, GeneratedTheme>>;
+  readonly cardBacks: Readonly<Record<string, string>>;
+  readonly cardFaces: Readonly<Record<string, Readonly<Record<string, string>>>>;
+} = ${JSON.stringify(out, null, 2)};
+`;
+  writeFileSync(manifestPath, body);
+  for (const w of warnings) log(`warning: ${w}`);
+  return { manifest: out, warnings };
+}
+
+/** App icons. Uses art/icons/icon-1024.png when supplied, else the card back on #101010. */
+async function buildIcons({ artDir, publicDir, iconSource, log }) {
+  const outDir = join(publicDir, 'icons');
+  mkdirSync(outDir, { recursive: true });
+  const supplied = join(artDir, 'icons', 'icon-1024.png');
+
+  const master = async (inset) => {
+    let art;
+    if (existsSync(supplied)) {
+      const size = Math.round(1024 * inset);
+      art = await sharp(supplied).resize(size, size).toBuffer();
+    } else {
+      const h = Math.round(1024 * inset);
+      const w = Math.round((h * 5) / 7);
+      const card = await sharp(readFileSync(iconSource), { density: 600 }).resize(w, h, { fit: 'fill' }).png().toBuffer();
+      const r = Math.round(w * 0.08);
+      const mask = Buffer.from(`<svg width="${w}" height="${h}"><rect width="${w}" height="${h}" rx="${r}" fill="#fff"/></svg>`);
+      art = await sharp(card).composite([{ input: mask, blend: 'dest-in' }]).png().toBuffer();
+    }
     return sharp({ create: { width: 1024, height: 1024, channels: 3, background: BG } })
       .composite([{ input: art, gravity: 'centre' }])
       .png()
       .toBuffer();
+  };
+
+  // A supplied icon fills the canvas (iOS rounds the corners); the maskable one keeps the art in the safe zone.
+  const standard = await master(existsSync(supplied) ? 1 : 0.8);
+  const maskable = await master(existsSync(supplied) ? 0.8 : 0.6);
+  const outputs = [
+    ['icon-192.png', standard, 192],
+    ['icon-512.png', standard, 512],
+    ['icon-maskable-512.png', maskable, 512],
+    ['apple-touch-icon.png', standard, 180],
+    ['favicon-32.png', standard, 32],
+  ];
+  for (const [name, src, size] of outputs) {
+    await sharp(src).resize(size, size).png({ compressionLevel: 9, palette: size <= 192 }).toFile(join(outDir, name));
   }
-  const h = Math.round(1024 * inset);
-  const w = Math.round((h * 5) / 7);
-  const card = await sharp(readFileSync('src/assets/placeholders/teal-geometric.svg'), { density: 600 })
-    .resize(w, h, { fit: 'fill' })
-    .png()
-    .toBuffer();
-  // Round the card's corners to match the board.
-  const r = Math.round(w * 0.08);
-  const mask = Buffer.from(`<svg width="${w}" height="${h}"><rect width="${w}" height="${h}" rx="${r}" fill="#fff"/></svg>`);
-  const rounded = await sharp(card).composite([{ input: mask, blend: 'dest-in' }]).png().toBuffer();
-  return sharp({ create: { width: 1024, height: 1024, channels: 3, background: BG } })
-    .composite([{ input: rounded, gravity: 'centre' }])
-    .png()
-    .toBuffer();
+  log(`icons (${existsSync(supplied) ? 'from art/icons/icon-1024.png' : 'placeholder'})`);
 }
 
-const standard = await master(0.8);
-const maskable = await master(0.6); // Android masks can crop to the central ~80% circle.
-
-const outputs = [
-  ['icon-192.png', standard, 192],
-  ['icon-512.png', standard, 512],
-  ['icon-maskable-512.png', maskable, 512],
-  ['apple-touch-icon.png', standard, 180],
-  ['favicon-32.png', standard, 32],
-];
-for (const [name, src, size] of outputs) {
-  await sharp(src).resize(size, size).png({ compressionLevel: 9, palette: size <= 192 }).toFile(`${OUT}/${name}`);
-  console.log(`${OUT}/${name}`);
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  await buildAssets(); // size warnings are advisory and printed above
 }

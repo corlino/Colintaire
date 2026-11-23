@@ -10,6 +10,7 @@ import { formatTime, formatVegas } from '../../src/ui/format';
 import { AppearanceModal } from '../../src/ui/modals/AppearanceModal';
 import { NewGameModal } from '../../src/ui/modals/NewGameModal';
 import { StatsPanel } from '../../src/ui/StatsPanel';
+import { cs, stateWith } from '../helpers';
 
 const store = () => useGameStore.getState();
 
@@ -108,5 +109,47 @@ describe('Board controls', () => {
     render(<Board metrics={computeMetrics(343, 560)} />);
     fireEvent.click(screen.getByRole('button', { name: 'Appearance' }));
     expect(store().activeModal).toBe('appearance');
+  });
+});
+
+describe('keyboard and screen-reader play (desktop, TAD §13)', () => {
+  const key = (el: HTMLElement, k: string) => fireEvent.keyDown(el, { key: k });
+  const pileBtn = (name: RegExp) => screen.getByRole('button', { name });
+
+  it('selects with Enter, moves with Enter on another pile, and announces it', () => {
+    act(() => store().loadGame(stateWith({ tableau: [cs('S09'), cs('H08'), [], [], [], cs('S01'), []] })));
+    render(<Board metrics={computeMetrics(343, 560)} />);
+    key(pileBtn(/^Pile 2, 8 of hearts/), 'Enter');
+    expect(pileBtn(/^Pile 2/)).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('announcer')).toHaveTextContent('Selected 8 of hearts');
+    key(pileBtn(/^Pile 1/), 'Enter');
+    expect(store().session.game.board.tableau[0]!.map((c) => c.id)).toEqual(['S09', 'H08']);
+    expect(screen.getByTestId('announcer')).toHaveTextContent('8 of hearts to pile 1');
+    expect(pileBtn(/^Pile 1, 9 of spades down to 8 of hearts/)).toBeInTheDocument();
+  });
+
+  it('F sends to the foundation; Enter again reaches further down a run; Escape cancels', () => {
+    act(() => store().loadGame(stateWith({ tableau: [cs('S09', 'H08'), [], [], [], [], cs('S01'), [cs('D10')[0]!]] })));
+    render(<Board metrics={computeMetrics(343, 560)} />);
+    key(pileBtn(/^Pile 6/), 'f');
+    expect(store().session.game.board.foundations[0]!.map((c) => c.id)).toEqual(['S01']);
+
+    const p1 = pileBtn(/^Pile 1/);
+    key(p1, 'Enter');
+    key(p1, 'Enter'); // now 9♠ and 8♥
+    expect(screen.getByTestId('announcer')).toHaveTextContent('Selected 9 of spades and 1 more');
+    key(p1, 'Escape');
+    expect(p1).toHaveAttribute('aria-pressed', 'false');
+    key(p1, 'Enter');
+    key(p1, 'Enter');
+    key(pileBtn(/^Pile 7/), 'Enter');
+    expect(store().session.game.board.tableau[6]!.map((c) => c.id)).toEqual(['D10', 'S09', 'H08']);
+  });
+
+  it('the stock draws from the keyboard and says which card', () => {
+    act(() => store().loadGame(stateWith({ stock: [{ id: 'C05', suit: 'C', rank: 5, faceUp: false }] })));
+    render(<Board metrics={computeMetrics(343, 560)} />);
+    key(screen.getByRole('button', { name: /^Stock, 1 card\./ }), 'Enter');
+    expect(screen.getByTestId('announcer')).toHaveTextContent('Drew 5 of clubs');
   });
 });

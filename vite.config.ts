@@ -7,11 +7,14 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
-let sha = 'dev';
-try {
-  sha = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
-} catch {
-  /* not a git checkout */
+// Vercel builds without a .git folder but exposes the commit in an env var.
+let sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'dev';
+if (sha === 'dev') {
+  try {
+    sha = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+  } catch {
+    /* not a git checkout */
+  }
 }
 
 export default defineConfig({

@@ -18,7 +18,8 @@ import {
   pickDropTarget,
   pileAtPoint,
 } from './boardInput';
-import { CardFace, CardView, MOTION, type CardSize, type Jump } from './CardView';
+import { CardFace, cardLabel, CardView, MOTION, type CardSize, type Jump } from './CardView';
+import { pileName } from './format';
 import { ControlButton } from './controls';
 import { PeekPanel } from './PeekPanel';
 import { SuitIcon } from './SuitIcon';
@@ -99,6 +100,9 @@ export function Board({ metrics }: { metrics: Metrics }) {
   const [shakes, setShakes] = useState<Record<string, number>>({});
   const [peekPile, setPeekPile] = useState<number | null>(null);
   const [dealSeen, setDealSeen] = useState<number | null>(null);
+  /** Polite screen-reader message; a trailing no-break space makes repeats re-announce. */
+  const [announcement, setAnnouncement] = useState('');
+  const say = (msg: string) => setAnnouncement((m) => (m === msg ? `${msg}\u00a0` : msg));
   const press = useRef<Press | null>(null);
   const lastTap = useRef<{ id: string; time: number } | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -135,7 +139,9 @@ export function Board({ metrics }: { metrics: Metrics }) {
 
   const move = (from: PileRef, cardIndex: number, to: PileRef, jumpFrom?: { x: number; y: number }) => {
     const ids = runIds(from, cardIndex);
+    const lead = (pileAt(board, from) ?? [])[cardIndex];
     const result = dispatch({ type: 'MOVE', from, cardIndex, to });
+    if (result.ok && lead) say(`${cardLabel(lead)}${ids.length > 1 ? ` and ${ids.length - 1} more` : ''} to ${pileName(to)}`);
     if (result.ok && jumpFrom) {
       const nonce = jumpNonce++;
       setJumps((j) => {
@@ -148,6 +154,95 @@ export function Board({ metrics }: { metrics: Metrics }) {
   };
 
   const select = (sel: Selection | null) => setSelection(sel ? { sel, board } : null);
+
+  const tapStock = () => {
+    select(null);
+    if (board.stock.length === 0) {
+      if (dispatch({ type: 'RECYCLE' }).ok) say('Waste turned back into the stock');
+      return;
+    }
+    const r = dispatch({ type: 'DRAW' });
+    const drawn = r.ok ? r.state.board.waste.at(-1) : undefined;
+    if (drawn) say(`Drew ${cardLabel(drawn)}`);
+  };
+
+  // ---------------------------------------------------------------- keyboard and screen-reader play
+  // Each pile has an invisible focusable button (pointer-events: none, so touch is unaffected).
+  // Enter/Space selects the top card; pressing again on the same pile reaches one card further
+  // down the run; Enter on another pile moves there. F sends to the foundation, Escape cancels.
+
+  const activatePile = (ref: PileRef) => {
+    if (won) return;
+    const pile = pileAt(board, ref) ?? [];
+    if (selection && !sameRef(selection.from, ref)) {
+      if (move(selection.from, selection.cardIndex, ref)) select(null);
+      else {
+        shakeIds(runIds(selection.from, selection.cardIndex));
+        say(`Can't move there`);
+        select(null);
+      }
+      return;
+    }
+    const start = selection ? selection.cardIndex - 1 : pile.length - 1;
+    const lead = pile[start];
+    if (lead && canPickUp(board, ref, start)) {
+      select({ from: ref, cardIndex: start });
+      const n = pile.length - start;
+      say(`Selected ${cardLabel(lead)}${n > 1 ? ` and ${n - 1} more` : ''}`);
+    } else {
+      select(null);
+      if (selection) say('Selection cleared');
+    }
+  };
+
+  const sendToFoundation = (ref: PileRef) => {
+    const pile = pileAt(board, ref) ?? [];
+    const idx = selection && sameRef(selection.from, ref) ? selection.cardIndex : pile.length - 1;
+    const to = idx >= 0 ? autoFoundationTarget(board, ref, idx) : null;
+    select(null);
+    if (!to || !move(ref, idx, to)) say(`Can't go to a foundation`);
+  };
+
+  const onPileKey = (ref: PileRef) => (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      activatePile(ref);
+    } else if (e.key === 'f' || e.key === 'F') {
+      e.preventDefault();
+      sendToFoundation(ref);
+    } else if (e.key === 'Escape' && selection) {
+      e.stopPropagation();
+      select(null);
+      say('Selection cleared');
+    }
+  };
+
+  const describePile = (ref: PileRef): string => {
+    const pile = pileAt(board, ref) ?? [];
+    const name = pileName(ref);
+    const label = name[0]!.toUpperCase() + name.slice(1);
+    if (pile.length === 0) return `${label}, empty`;
+    if (ref.kind !== 'tableau') return `${label}, ${cardLabel(pile[pile.length - 1]!)}${ref.kind === 'waste' ? '' : ` on top`}`;
+    const down = pile.filter((c) => !c.faceUp).length;
+    const up = pile.filter((c) => c.faceUp);
+    const run = up.length > 1 ? `${cardLabel(up[0]!)} down to ${cardLabel(up[up.length - 1]!)}` : cardLabel(up[0]!);
+    return `${label}, ${down ? `${down} face-down, ` : ''}${run}`;
+  };
+
+  const pileButtonRect = (ref: PileRef): Rect => {
+    const pile = pileAt(board, ref) ?? [];
+    const top = layout.cards.find((c) => sameRef(c.pile, ref) && c.index === pile.length - 1);
+    if (top) return { x: top.x, y: top.y, w: metrics.cardW, h: metrics.cardH };
+    if (ref.kind === 'tableau') return slots.tableau[ref.index]!.rect;
+    if (ref.kind === 'foundation') return slots.foundations[ref.index]!;
+    return slots.waste;
+  };
+
+  const pileRefs: PileRef[] = [
+    ...FOUNDATION_SUITS.map((_, index) => ({ kind: 'foundation' as const, index })),
+    ...Array.from({ length: 7 }, (_, index) => ({ kind: 'tableau' as const, index })),
+    { kind: 'waste' },
+  ];
 
   // ---------------------------------------------------------------- pointer handling
 
@@ -219,8 +314,7 @@ export function Board({ metrics }: { metrics: Metrics }) {
     // Stock: deal one, or recycle when empty.
     const inStock = x >= slots.stock.x && x <= slots.stock.x + slots.stock.w && y >= slots.stock.y && y <= slots.stock.y + slots.stock.h;
     if (inStock) {
-      dispatch(board.stock.length ? { type: 'DRAW' } : { type: 'RECYCLE' });
-      select(null);
+      tapStock();
       return;
     }
     // Folded bundle: open the peek panel.
@@ -239,7 +333,10 @@ export function Board({ metrics }: { metrics: Metrics }) {
       const to = autoFoundationTarget(board, card.pile, card.index);
       select(null);
       if (to) move(card.pile, card.index, to);
-      else if (pickable) shakeIds([card.id]);
+      else if (pickable) {
+        shakeIds([card.id]);
+        say(`Can't go to a foundation`);
+      }
       return;
     }
     lastTap.current = card ? { id: card.id, time: now } : null;
@@ -257,6 +354,7 @@ export function Board({ metrics }: { metrics: Metrics }) {
         }
         if (!pickable) {
           shakeIds(runIds(selection.from, selection.cardIndex));
+          say(`Can't move there`);
           select(null);
           return;
         }
@@ -305,12 +403,31 @@ export function Board({ metrics }: { metrics: Metrics }) {
       )}
 
       <div className="bg-surface/80" style={{ ...box(slots.waste), ...slotStyle }} />
+
+      {pileRefs.map((ref) => {
+        const selectedHere = !!selection && sameRef(selection.from, ref);
+        return (
+          <button
+            key={`k-${ref.kind}-${'index' in ref ? ref.index : ''}`}
+            type="button"
+            tabIndex={won ? -1 : 0}
+            aria-label={describePile(ref)}
+            aria-pressed={selectedHere}
+            onKeyDown={onPileKey(ref)}
+            className="pointer-events-none absolute z-[600] rounded-[inherit] outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/60"
+            style={{ ...box(pileButtonRect(ref)), ...slotStyle }}
+            data-pile-key={`${ref.kind}${'index' in ref ? `-${ref.index}` : ''}`}
+          />
+        );
+      })}
       <div
         role="button"
         tabIndex={0}
-        aria-label={board.stock.length ? 'Draw a card' : 'Recycle the waste pile'}
+        aria-label={board.stock.length ? `Stock, ${board.stock.length} ${board.stock.length === 1 ? "card" : "cards"}. Draw a card` : 'Stock, empty. Turn the waste back over'}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') dispatch(board.stock.length ? { type: 'DRAW' } : { type: 'RECYCLE' });
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          e.preventDefault();
+          tapStock();
         }}
         className="flex items-center justify-center border border-border/70 text-text-muted focus-visible:outline-2 focus-visible:outline-white"
         style={{ ...box(slots.stock), ...slotStyle }}
@@ -406,6 +523,10 @@ export function Board({ metrics }: { metrics: Metrics }) {
           onClose={() => setPeekPile(null)}
         />
       )}
+
+      <div className="sr-only" aria-live="polite" data-testid="announcer">
+        {announcement}
+      </div>
     </div>
   );
 }
