@@ -25,7 +25,6 @@ export interface Jump {
 export const MOTION = {
   move: 0.18,
   deal: 0.22,
-  flip: 0.2,
   lift: 0.12,
   shake: 0.2,
 } as const;
@@ -147,25 +146,20 @@ export const CardView = memo(function CardView({ card, x, y, z, size, backSrc, f
   return (
     <motion.div
       className="card absolute top-0 left-0"
-      style={{ x: mx, y: my, width: size.w, height: size.h, zIndex: z, opacity: hidden ? 0 : 1, perspective: 600 }}
+      style={{ x: mx, y: my, width: size.w, height: size.h, zIndex: z, opacity: hidden ? 0 : 1 }}
       data-card={card.id}
       aria-label={cardLabel(card)}
     >
       <motion.div className="absolute inset-0" style={{ x: shakeX }}>
-        <motion.div
+        {/* Flip: a CSS animation on a fresh element whenever the face changes after mount.
+            It runs on the compositor and leaves no 3D transform behind (no per-card 3D layers). */}
+        <div
           key={String(card.faceUp)}
-          className="absolute inset-0 overflow-hidden"
-          style={{
-            borderRadius: size.radius,
-            backfaceVisibility: 'hidden',
-            boxShadow: selected ? '0 6px 14px rgba(0,0,0,0.45)' : undefined,
-          }}
-          initial={flips > 0 && !reduce ? { rotateY: 90 } : false}
-          animate={{ rotateY: 0 }}
-          transition={{ duration: MOTION.flip, ease: 'easeOut' }}
+          className={`absolute inset-0 overflow-hidden ${flips > 0 && !reduce ? 'card-flip' : ''}`}
+          style={{ borderRadius: size.radius, boxShadow: selected ? '0 6px 14px rgba(0,0,0,0.45)' : undefined }}
         >
           <CardFace card={card} size={size} backSrc={backSrc} faces={faces} />
-        </motion.div>
+        </div>
         {outlined && (
           <div className="pointer-events-none absolute -inset-[2px] border-2 border-accent" style={{ borderRadius: size.radius + 2 }} />
         )}

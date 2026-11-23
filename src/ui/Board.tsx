@@ -1,6 +1,6 @@
 import { ArrowPathIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
 import { animate, motion, useMotionValue, useReducedMotion } from 'motion/react';
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { CARD_BACKS, CARD_FACES, DEFAULTS, pick, THEMES } from '../assets/registry';
 import { FOUNDATION_SUITS } from '../engine/constants';
 import { autoFoundationTarget, canPickUp, pileAt, sameRef } from '../engine/rules';
@@ -74,7 +74,8 @@ function dealJumps(layout: LayoutResult): Record<string, Jump> {
   return jumps;
 }
 
-export function Board({ metrics }: { metrics: Metrics }) {
+/** Memoised: the board re-renders only when the game, settings or screen size change. */
+export const Board = memo(function Board({ metrics }: { metrics: Metrics }) {
   const game = useGameStore((s) => s.session.game);
   const settings = useGameStore((s) => s.settings);
   const dealId = useGameStore((s) => s.dealId);
@@ -121,7 +122,11 @@ export function Board({ metrics }: { metrics: Metrics }) {
   const selection = rawSelection && rawSelection.board === board ? rawSelection.sel : null;
   const won = game.status === 'won';
 
-  const size: CardSize = { w: metrics.cardW, h: metrics.cardH, radius: metrics.radius, rankFont: metrics.rankFont };
+  // Stable object, so the memoised cards skip re-rendering when only other cards change.
+  const size: CardSize = useMemo(
+    () => ({ w: metrics.cardW, h: metrics.cardH, radius: metrics.radius, rankFont: metrics.rankFont }),
+    [metrics.cardW, metrics.cardH, metrics.radius, metrics.rankFont],
+  );
   const { slots } = layout;
 
   const runIds = (from: PileRef, cardIndex: number) => (pileAt(board, from) ?? []).slice(cardIndex).map((c) => c.id);
@@ -530,7 +535,7 @@ export function Board({ metrics }: { metrics: Metrics }) {
       </div>
     </div>
   );
-}
+});
 
 /** The picked-up run, fanned downward under the finger whichever stack it came from (TAD §10.1). */
 function DragLayer({

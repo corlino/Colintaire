@@ -149,3 +149,21 @@ body {
     outline-offset: 2px;
   }
 }
+
+/* Card flip (TAD §10.4: 200 ms rotateY). Compositor-only; nothing remains once it ends. */
+@keyframes card-flip {
+  from {
+    transform: perspective(600px) rotateY(90deg);
+  }
+  to {
+    transform: perspective(600px) rotateY(0deg);
+  }
+}
+.card-flip {
+  animation: card-flip var(--duration-normal) ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-flip {
+    animation: none;
+  }
+}

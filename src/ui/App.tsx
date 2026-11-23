@@ -3,7 +3,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULTS, HEADER_LOGO, pick, THEMES } from '../assets/registry';
 import { computeMetrics } from '../layout';
 import { useGameStore } from '../store/gameStore';
-import { elapsedMs } from '../store/timer';
 import { Board } from './Board';
 import { RotateOverlay } from './RotateOverlay';
 import { AppearanceModal } from './modals/AppearanceModal';
@@ -54,19 +53,6 @@ function useVisibilityPause() {
   }, []);
 }
 
-/** Whole elapsed seconds, re-rendering only when the displayed second changes. */
-function useElapsedSeconds() {
-  const timer = useGameStore((s) => s.timer);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (timer.startedAt === null) return;
-    const id = setInterval(() => setNow(Date.now()), 250);
-    return () => clearInterval(id);
-  }, [timer.startedAt]);
-  const at = timer.startedAt === null ? 0 : Math.max(now, timer.startedAt);
-  return Math.floor(elapsedMs(timer, at) / 1000);
-}
-
 /** Crowned-club mark either side of the title (owner art, art/brand/logo-silver.png). */
 function HeaderLogo() {
   if (!HEADER_LOGO) return null;
@@ -87,7 +73,6 @@ export function App() {
   useVisibilityPause();
   const [boardRef, area] = useSize<HTMLDivElement>();
   const metrics = useMemo(() => (area.width > 0 ? computeMetrics(area.width, area.height) : null), [area.width, area.height]);
-  const seconds = useElapsedSeconds();
   const activeModal = useGameStore((s) => s.activeModal);
   const openModal = useGameStore((s) => s.openModal);
 
@@ -116,7 +101,7 @@ export function App() {
           {metrics && <Board metrics={metrics} />}
         </div>
         <div className="shrink-0" style={{ paddingTop: SHELL.statsGap }}>
-          {metrics && <StatsPanel width={metrics.boardW} seconds={seconds} />}
+          {metrics && <StatsPanel width={metrics.boardW} />}
         </div>
       </div>
       <AnimatePresence>
