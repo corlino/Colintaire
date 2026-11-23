@@ -63,7 +63,7 @@ All automated checks run in GitHub Actions on every push (`.github/workflows/ci.
 | U20 | Upright bottom-right index | screens: game screen baseline; DECISIONS "Corner index layout" | ✅ |
 | U21 | iPhone SE / 13 mini floor; portrait only | layout property test at 375 × 667; e2e rotate spec | ✅ |
 | U22 | No pencil icon | screens: Appearance baseline | ✅ |
-| U23 | Placeholder art until PNGs arrive | pipeline tests (swap works); final art pending owner | ⏳ art |
+| U23 | Placeholder art until PNGs arrive | pipeline tests (swap works). Supplied: app icon, header logo. Still placeholder: background, card back | ⏳ art |
 | U24 | Home-screen name "Colintaire", header "SOLITAIRE" | manifest in `vite.config.ts`; screens baseline | ✅ |
 | U25 | Vercel at colintaire.vercel.app | live; every push to `main` deploys | ✅ |
 | U26 | Offline service worker, no analytics | production preview checked offline (M5); no analytics code | ✅ |

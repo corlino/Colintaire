@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import sharp from 'sharp';
@@ -15,13 +15,23 @@ let result: Awaited<ReturnType<typeof buildAssets>>;
 beforeAll(async () => {
   root = mkdtempSync(join(tmpdir(), 'colintaire-assets-'));
   const art = join(root, 'art');
-  const dirs = ['themes/nebula-dusk', 'themes/deep-sea', 'card-backs/teal-geometric', 'card-faces/partial'];
+  const dirs = ['themes/nebula-dusk', 'themes/deep-sea', 'card-backs/teal-geometric', 'card-faces/partial', 'brand', 'icons'];
   for (const d of dirs) mkdirSync(join(art, d), { recursive: true });
   await png(join(art, 'themes/nebula-dusk/background.png'), 1290, 2796);
   await png(join(art, 'themes/nebula-dusk/background-wide.png'), 2560, 1440);
   await png(join(art, 'themes/deep-sea/background.png'), 800, 1200); // wrong size → warning, still built
   await png(join(art, 'card-backs/teal-geometric/back.png'), 750, 1050);
   await png(join(art, 'card-faces/partial/S01.png'), 750, 1050); // 1 of 52 → skipped
+  // A 100×100 transparent canvas with a 40×60 mark made of two bars (a transparent gap between, like a real logo).
+  const bar = { create: { width: 40, height: 25, channels: 4 as const, background: '#cccccc' } };
+  await sharp({ create: { width: 100, height: 100, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite([
+      { input: bar, left: 30, top: 20 },
+      { input: bar, left: 30, top: 55 },
+    ])
+    .png()
+    .toFile(join(art, 'brand/logo-silver.png'));
+  await png(join(art, 'icons/icon-1024.png'), 1024, 1024);
   mkdirSync(join(root, 'public'));
   writeFileSync(join(root, 'icon.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="250" height="350"><rect width="250" height="350" fill="#12c5c8"/></svg>');
   result = await buildAssets({
@@ -41,7 +51,10 @@ describe('npm run assets (TAD §12.5)', () => {
     expect([bg.format, bg.width, bg.height]).toEqual(['webp', SIZES.background.width, SIZES.background.height]);
     const back = await sharp(join(root, 'public/art/card-backs/teal-geometric/back.webp')).metadata();
     expect([back.width, back.height]).toEqual([SIZES.card.width, SIZES.card.height]);
-    expect(existsSync(join(root, 'public/icons/apple-touch-icon.png'))).toBe(true);
+    const touch = await sharp(join(root, 'public/icons/apple-touch-icon.png')).metadata();
+    expect([touch.width, touch.height]).toEqual([180, 180]);
+    const logo = await sharp(join(root, 'public/art/brand/logo-silver.webp')).metadata();
+    expect([logo.format, logo.height, logo.hasAlpha]).toEqual(['webp', SIZES.logoHeight, true]);
   });
 
   it('lists what it built and warns about wrong sizes and incomplete face sets', () => {
@@ -51,6 +64,7 @@ describe('npm run assets (TAD §12.5)', () => {
     });
     expect(result.manifest.cardBacks).toEqual({ 'teal-geometric': '/art/card-backs/teal-geometric/back.webp' });
     expect(result.manifest.cardFaces).toEqual({});
+    expect(result.manifest.brand).toEqual({ silver: { src: '/art/brand/logo-silver.webp', aspect: 0.667 } });
     expect(result.warnings.some((w) => w.includes('deep-sea') && w.includes('800×1200'))).toBe(true);
     expect(result.warnings.some((w) => w.includes('"partial"') && w.includes('51 of 52'))).toBe(true);
     expect(readFileSync(join(root, 'generated.ts'), 'utf8')).toContain('export const GENERATED');

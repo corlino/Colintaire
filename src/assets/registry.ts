@@ -73,6 +73,7 @@ interface Generated {
   readonly themes: Readonly<Record<string, GeneratedTheme>>;
   readonly cardBacks: Readonly<Record<string, string>>;
   readonly cardFaces: Readonly<Record<string, Readonly<Record<string, string>>>>;
+  readonly brand?: Readonly<Record<string, { readonly src: string; readonly aspect: number }>>;
 }
 
 /** Overlay generated art on the hand-written entries; unknown ids become new entries, in folder order. */
@@ -109,6 +110,9 @@ const registries = withArt({ themes: [nebulaDusk], backs: [tealGeometricBack], f
 export const THEMES: readonly ThemeAsset[] = registries.themes;
 export const CARD_BACKS: readonly CardBackAsset[] = registries.backs;
 export const CARD_FACES: readonly CardFaceSet[] = registries.faces;
+
+/** Brand mark shown either side of the header title (light version for the dark UI), if supplied. */
+export const HEADER_LOGO: { readonly src: string; readonly aspect: number } | undefined = GENERATED.brand['silver'];
 
 export const DEFAULTS = { theme: 'nebula-dusk', back: 'teal-geometric', face: 'classic' } as const;
 

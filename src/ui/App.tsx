@@ -1,6 +1,6 @@
 import { AnimatePresence } from 'motion/react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { DEFAULTS, pick, THEMES } from '../assets/registry';
+import { DEFAULTS, HEADER_LOGO, pick, THEMES } from '../assets/registry';
 import { computeMetrics } from '../layout';
 import { useGameStore } from '../store/gameStore';
 import { elapsedMs } from '../store/timer';
@@ -67,6 +67,21 @@ function useElapsedSeconds() {
   return Math.floor(elapsedMs(timer, at) / 1000);
 }
 
+/** Crowned-club mark either side of the title (owner art, art/brand/logo-silver.png). */
+function HeaderLogo() {
+  if (!HEADER_LOGO) return null;
+  return (
+    <img
+      src={HEADER_LOGO.src}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      className="mx-sm h-8 w-auto shrink-0 select-none min-[400px]:h-9"
+      style={{ aspectRatio: String(HEADER_LOGO.aspect) }}
+    />
+  );
+}
+
 export function App() {
   useThemeBackground();
   useVisibilityPause();
@@ -79,18 +94,23 @@ export function App() {
   return (
     <div className="app-shell isolate flex h-full flex-col">
       <div className="mx-auto flex h-full w-full max-w-[520px] min-h-0 flex-col px-lg min-[400px]:px-[20px]">
-        <header className="flex shrink-0 items-center gap-lg" style={{ height: SHELL.header }}>
-          <span className="h-px flex-1 bg-divider" />
-          {/* Tapping the title opens New Game (decision U2). */}
-          <button
-            type="button"
-            onClick={() => openModal('newGame')}
-            aria-label="Solitaire — new game"
-            className="rounded-md px-xs focus-visible:outline-2 focus-visible:outline-white"
-          >
-            <h1 className="text-title">Solitaire</h1>
-          </button>
-          <span className="h-px flex-1 bg-divider" />
+        {/* With logos: logo · short line · title · short line · logo (owner reference). Without: lines fill the width. */}
+        <header className="flex shrink-0 items-center gap-md" style={{ height: SHELL.header }}>
+          {HEADER_LOGO && <HeaderLogo />}
+          <span className={HEADER_LOGO ? 'flex flex-1 items-center justify-center gap-md min-[400px]:gap-lg' : 'contents'}>
+            <span className={`h-px bg-divider ${HEADER_LOGO ? 'w-5 min-[400px]:w-6' : 'flex-1'}`} />
+            {/* Tapping the title opens New Game (decision U2). */}
+            <button
+              type="button"
+              onClick={() => openModal('newGame')}
+              aria-label="Solitaire — new game"
+              className="rounded-md px-xs focus-visible:outline-2 focus-visible:outline-white"
+            >
+              <h1 className="text-title">Solitaire</h1>
+            </button>
+            <span className={`h-px bg-divider ${HEADER_LOGO ? 'w-5 min-[400px]:w-6' : 'flex-1'}`} />
+          </span>
+          {HEADER_LOGO && <HeaderLogo />}
         </header>
         <div ref={boardRef} className="relative min-h-0 flex-1">
           {metrics && <Board metrics={metrics} />}

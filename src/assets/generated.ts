@@ -8,8 +8,20 @@ export const GENERATED: {
   readonly themes: Readonly<Record<string, GeneratedTheme>>;
   readonly cardBacks: Readonly<Record<string, string>>;
   readonly cardFaces: Readonly<Record<string, Readonly<Record<string, string>>>>;
+  /** Brand marks by name (e.g. "silver"); aspect is width / height. */
+  readonly brand: Readonly<Record<string, { readonly src: string; readonly aspect: number }>>;
 } = {
   "themes": {},
   "cardBacks": {},
-  "cardFaces": {}
+  "cardFaces": {},
+  "brand": {
+    "dark": {
+      "src": "/art/brand/logo-dark.webp",
+      "aspect": 0.86
+    },
+    "silver": {
+      "src": "/art/brand/logo-silver.webp",
+      "aspect": 0.86
+    }
+  }
 };
