@@ -100,17 +100,21 @@ body {
   height: 100dvh;
 }
 
-/* Theme background: only the theme registry writes these two variables (Style Guide §3.2). */
-.app-background {
+/* App shell: theme background (only the theme registry writes these variables, Style Guide 3.2),
+   with the scrim layered into the background itself so it can never cover the cards. */
+.app-shell {
   background-color: var(--color-background);
-  background-image: var(--app-bg-image);
+  background-image: linear-gradient(var(--app-bg-scrim, transparent), var(--app-bg-scrim, transparent)),
+    var(--app-bg-image, none);
   background-size: cover;
   background-position: center;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
 }
-.app-background::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: var(--app-bg-scrim, transparent);
-  pointer-events: none;
+
+.card,
+.control {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
