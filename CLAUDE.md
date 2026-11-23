@@ -22,4 +22,6 @@ Mobile-first Klondike Solitaire PWA with a custom 5+2 tableau. Vite + React 19 +
 - All art is placeholder until the owner supplies PNGs in `art/` (TAD §12.5).
 
 ## Commands
-`npm run dev` (add `-- --host` to test on a phone over Wi-Fi) · `npm run test` · `npm run coverage` · `npm run check` · `npm run build`
+`npm run dev` (add `-- --host` to test on a phone over Wi-Fi) · `npm run test` · `npm run coverage` · `npm run e2e` (Playwright: iPhone 13 mini, iPhone 15 Pro Max, Desktop Chrome) · `npm run check` · `npm run build`
+
+Dev-only hook for tests and manual checks: `window.__colintaire.newGame({ seed, mode })`, `.loadGame(state)`, `.getState()`.

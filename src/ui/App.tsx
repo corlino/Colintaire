@@ -1,8 +1,13 @@
+import { AnimatePresence } from 'motion/react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULTS, pick, THEMES } from '../assets/registry';
 import { computeMetrics } from '../layout';
 import { useGameStore } from '../store/gameStore';
+import { elapsedMs } from '../store/timer';
 import { Board } from './Board';
+import { AppearanceModal } from './modals/AppearanceModal';
+import { NewGameModal } from './modals/NewGameModal';
+import { WinModal } from './modals/WinModal';
 import { SHELL } from './shellSizes';
 import { StatsPanel } from './StatsPanel';
 
@@ -33,26 +38,70 @@ function useThemeBackground() {
   }, [themeId]);
 }
 
+/** Pause the timer while the page is hidden (TAD §11.3). */
+function useVisibilityPause() {
+  useEffect(() => {
+    const sync = () => useGameStore.getState().setPaused('hidden', document.visibilityState === 'hidden');
+    sync();
+    document.addEventListener('visibilitychange', sync);
+    window.addEventListener('pagehide', sync);
+    return () => {
+      document.removeEventListener('visibilitychange', sync);
+      window.removeEventListener('pagehide', sync);
+    };
+  }, []);
+}
+
+/** Whole elapsed seconds, re-rendering only when the displayed second changes. */
+function useElapsedSeconds() {
+  const timer = useGameStore((s) => s.timer);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (timer.startedAt === null) return;
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [timer.startedAt]);
+  const at = timer.startedAt === null ? 0 : Math.max(now, timer.startedAt);
+  return Math.floor(elapsedMs(timer, at) / 1000);
+}
+
 export function App() {
   useThemeBackground();
+  useVisibilityPause();
   const [boardRef, area] = useSize<HTMLDivElement>();
   const metrics = useMemo(() => (area.width > 0 ? computeMetrics(area.width, area.height) : null), [area.width, area.height]);
+  const seconds = useElapsedSeconds();
+  const activeModal = useGameStore((s) => s.activeModal);
+  const openModal = useGameStore((s) => s.openModal);
 
   return (
-    <div className="app-shell flex h-full flex-col">
+    <div className="app-shell isolate flex h-full flex-col">
       <div className="mx-auto flex h-full w-full max-w-[520px] min-h-0 flex-col px-lg min-[400px]:px-[20px]">
         <header className="flex shrink-0 items-center gap-lg" style={{ height: SHELL.header }}>
           <span className="h-px flex-1 bg-divider" />
-          <h1 className="text-title">Solitaire</h1>
+          {/* Tapping the title opens New Game (decision U2). */}
+          <button
+            type="button"
+            onClick={() => openModal('newGame')}
+            aria-label="Solitaire — new game"
+            className="rounded-md px-xs focus-visible:outline-2 focus-visible:outline-white"
+          >
+            <h1 className="text-title">Solitaire</h1>
+          </button>
           <span className="h-px flex-1 bg-divider" />
         </header>
         <div ref={boardRef} className="relative min-h-0 flex-1">
           {metrics && <Board metrics={metrics} />}
         </div>
         <div className="shrink-0" style={{ paddingTop: SHELL.statsGap }}>
-          {metrics && <StatsPanel width={metrics.boardW} seconds={0} />}
+          {metrics && <StatsPanel width={metrics.boardW} seconds={seconds} />}
         </div>
       </div>
+      <AnimatePresence>
+        {activeModal === 'newGame' && <NewGameModal key="newGame" />}
+        {activeModal === 'appearance' && <AppearanceModal key="appearance" />}
+        {activeModal === 'win' && <WinModal key="win" />}
+      </AnimatePresence>
     </div>
   );
 }

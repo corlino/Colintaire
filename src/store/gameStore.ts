@@ -1,11 +1,13 @@
 /**
- * The one Zustand store (TAD §4): wraps the pure engine and session logic.
- * Timer, modal state and persistence are added in M4–M5.
+ * The one Zustand store (TAD §4): wraps the pure engine and session logic with
+ * session concerns — the timer, modal state and pause reasons.
+ * Persistence is added in M5.
  */
 import { create } from 'zustand';
 import { applyAction, newGame, randomSeed, type Action, type GameMode, type GameState, type Result } from '../engine';
 import { DEFAULTS } from '../assets/registry';
 import { confirmNewGame, EMPTY_LEDGER, resetVegasBalance, restart, type Session } from './session';
+import { syncTimer, TIMER_ZERO, type PauseReason, type TimerState } from './timer';
 
 export interface Settings {
   readonly themeId: string;
@@ -14,44 +16,108 @@ export interface Settings {
   readonly lastMode: GameMode;
 }
 
+export type ModalName = 'appearance' | 'newGame' | 'win';
+
+/** Delay before the win modal appears after the last foundation move (TAD §11.2). */
+export const WIN_MODAL_DELAY = 400;
+
 export interface GameStore {
   readonly session: Session;
   readonly settings: Settings;
+  readonly timer: TimerState;
+  readonly pauseReasons: readonly PauseReason[];
+  readonly activeModal: ModalName | null;
+  /** Increments on every new deal (new game or restart) so the board can play the deal animation. */
+  readonly dealId: number;
+
   dispatch(action: Action): Result;
   startNewGame(mode: GameMode): void;
   restartGame(): void;
   resetBalance(): void;
   setTheme(id: string): void;
   setCardBack(id: string): void;
+  openModal(name: ModalName): void;
+  closeModal(): void;
+  setPaused(reason: PauseReason, paused: boolean): void;
   /** Development/test only: load a specific game. */
   loadGame(game: GameState): void;
 }
 
-export const useGameStore = create<GameStore>()((set, get) => ({
-  session: { ledger: EMPTY_LEDGER, game: newGame(randomSeed(), 'classic') }, // U3: deal Classic on first launch
-  settings: { themeId: DEFAULTS.theme, cardBackId: DEFAULTS.back, cardFaceId: DEFAULTS.face, lastMode: 'classic' },
+const now = () => Date.now();
 
-  dispatch(action) {
-    const result = applyAction(get().session.game, action);
-    if (result.ok) set((s) => ({ session: { ...s.session, game: result.state } }));
-    return result;
-  },
-  startNewGame(mode) {
-    set((s) => ({ session: confirmNewGame(s.session, mode, randomSeed()), settings: { ...s.settings, lastMode: mode } }));
-  },
-  restartGame() {
-    set((s) => ({ session: restart(s.session, randomSeed()) }));
-  },
-  resetBalance() {
-    set((s) => ({ session: resetVegasBalance(s.session) }));
-  },
-  setTheme(id) {
-    set((s) => ({ settings: { ...s.settings, themeId: id } }));
-  },
-  setCardBack(id) {
-    set((s) => ({ settings: { ...s.settings, cardBackId: id } }));
-  },
-  loadGame(game) {
-    set((s) => ({ session: { ...s.session, game } }));
-  },
-}));
+type Core = Pick<GameStore, 'session' | 'timer' | 'pauseReasons'>;
+
+/** Recompute the timer from the current game status and pause reasons. */
+function withSyncedTimer<T extends Core>(s: T): T {
+  const shouldRun = s.session.game.status === 'playing' && s.pauseReasons.length === 0;
+  return { ...s, timer: syncTimer(s.timer, shouldRun, now()) };
+}
+
+let winTimeout: ReturnType<typeof setTimeout> | undefined;
+
+export const useGameStore = create<GameStore>()((set, get) => {
+  /** Swap in a freshly dealt session: timer back to 0, any modal closed. */
+  const deal = (session: Session, extra: Partial<GameStore> = {}) => {
+    clearTimeout(winTimeout);
+    set((s) => {
+      const pauseReasons = s.pauseReasons.filter((r) => r !== 'modal');
+      return withSyncedTimer({ ...s, ...extra, session, timer: TIMER_ZERO, pauseReasons, activeModal: null, dealId: s.dealId + 1 });
+    });
+  };
+
+  return {
+    session: { ledger: EMPTY_LEDGER, game: newGame(randomSeed(), 'classic') }, // U3: deal Classic on first launch
+    settings: { themeId: DEFAULTS.theme, cardBackId: DEFAULTS.back, cardFaceId: DEFAULTS.face, lastMode: 'classic' },
+    timer: { accumulatedMs: 0, startedAt: now() },
+    pauseReasons: [],
+    activeModal: null,
+    dealId: 0,
+
+    dispatch(action) {
+      const result = applyAction(get().session.game, action);
+      if (!result.ok) return result;
+      set((s) => withSyncedTimer({ ...s, session: { ...s.session, game: result.state } }));
+      if (result.state.status === 'won') {
+        clearTimeout(winTimeout);
+        winTimeout = setTimeout(() => get().openModal('win'), WIN_MODAL_DELAY);
+      }
+      return result;
+    },
+    startNewGame(mode) {
+      const s = get();
+      deal(confirmNewGame(s.session, mode, randomSeed()), { settings: { ...s.settings, lastMode: mode } });
+    },
+    restartGame() {
+      deal(restart(get().session, randomSeed()));
+    },
+    resetBalance() {
+      set((s) => ({ session: resetVegasBalance(s.session) }));
+    },
+    setTheme(id) {
+      set((s) => ({ settings: { ...s.settings, themeId: id } }));
+    },
+    setCardBack(id) {
+      set((s) => ({ settings: { ...s.settings, cardBackId: id } }));
+    },
+    openModal(name) {
+      set((s) => {
+        const pauseReasons = s.pauseReasons.includes('modal') ? s.pauseReasons : [...s.pauseReasons, 'modal' as const];
+        return withSyncedTimer({ ...s, activeModal: name, pauseReasons });
+      });
+    },
+    closeModal() {
+      set((s) => withSyncedTimer({ ...s, activeModal: null, pauseReasons: s.pauseReasons.filter((r) => r !== 'modal') }));
+    },
+    setPaused(reason, paused) {
+      set((s) => {
+        const has = s.pauseReasons.includes(reason);
+        if (has === paused) return s;
+        const pauseReasons = paused ? [...s.pauseReasons, reason] : s.pauseReasons.filter((r) => r !== reason);
+        return withSyncedTimer({ ...s, pauseReasons });
+      });
+    },
+    loadGame(game) {
+      deal({ ...get().session, game });
+    },
+  };
+});
