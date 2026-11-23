@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="750" height="1050" viewBox="0 0 750 1050"><rect width="750" height="1050" fill="#ffffff"/>
+  <!-- Zones -->
+  <rect x="0" y="0" width="750" height="252" fill="#e0a030" fill-opacity="0.10"/>
+  <rect x="0" y="0" width="750" height="179" fill="#12c5c8" fill-opacity="0.16"/>
+  <rect x="0" y="798" width="750" height="252" fill="#e0a030" fill-opacity="0.10"/>
+  <rect x="0" y="871" width="750" height="179" fill="#12c5c8" fill-opacity="0.16"/>
+  <line x1="0" y1="179" x2="750" y2="179" stroke="#12c5c8" stroke-width="3" stroke-dasharray="14 10"/> <line x1="0" y1="252" x2="750" y2="252" stroke="#e0a030" stroke-width="3" stroke-dasharray="14 10"/> <line x1="0" y1="871" x2="750" y2="871" stroke="#12c5c8" stroke-width="3" stroke-dasharray="14 10"/> <line x1="0" y1="798" x2="750" y2="798" stroke="#e0a030" stroke-width="3" stroke-dasharray="14 10"/>
+  <text x="738" y="205" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#12c5c8" text-anchor="end">179 px · 17%</text> <text x="738" y="278" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#e0a030" text-anchor="end">252 px · 24%</text>
+  <text x="738" y="897" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#12c5c8" text-anchor="end">871 px</text> <text x="738" y="824" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#e0a030" text-anchor="end">798 px</text>
+
+  <!-- Safe margin and app-rounded corners -->
+  <rect x="38" y="38" width="674" height="974" rx="34" fill="none" stroke="#5b5b5b" stroke-opacity="0.45" stroke-width="2" stroke-dasharray="4 8"/>
+  <rect x="1.5" y="1.5" width="747" height="1047" rx="72" fill="none" stroke="#d4d4d4" stroke-width="3"/>
+
+  <!-- Recommended corner-index boxes (rank left / suit right on top; suit left / rank right below; all upright) -->
+  <rect x="38" y="24" width="674" height="144" fill="none" stroke="#12c5c8" stroke-width="2" stroke-dasharray="6 6"/> <rect x="38" y="882" width="674" height="144" fill="none" stroke="#12c5c8" stroke-width="2" stroke-dasharray="6 6"/>
+  <text x="52" y="152" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="150" font-weight="700" fill="#080808" text-anchor="start">A</text> <path d="M12 2.4s-8.6 6.4-8.6 11.6c0 2.7 2.1 4.5 4.4 4.5 1.4 0 2.6-.6 3.4-1.6-.2 1.9-.9 3.5-2.4 4.9h6.4c-1.5-1.4-2.2-3-2.4-4.9.8 1 2 1.6 3.4 1.6 2.3 0 4.4-1.8 4.4-4.5 0-5.2-8.6-11.6-8.6-11.6z" fill="#080808" transform="translate(568 24) scale(6)"/> <path d="M12 2.4s-8.6 6.4-8.6 11.6c0 2.7 2.1 4.5 4.4 4.5 1.4 0 2.6-.6 3.4-1.6-.2 1.9-.9 3.5-2.4 4.9h6.4c-1.5-1.4-2.2-3-2.4-4.9.8 1 2 1.6 3.4 1.6 2.3 0 4.4-1.8 4.4-4.5 0-5.2-8.6-11.6-8.6-11.6z" fill="#080808" transform="translate(38 882) scale(6)"/> <text x="698" y="1010" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="150" font-weight="700" fill="#080808" text-anchor="end">A</text>
+
+  <!-- Notes -->
+  <text x="375" y="219" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#0b7f82" text-anchor="middle">Teal band (top 17%): rank + suit must sit here.</text>
+  <text x="375" y="243" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="19" font-weight="500" fill="#5b5b5b" text-anchor="middle">It is all that shows when a stack is squeezed.</text>
+  <text x="375" y="821" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="19" font-weight="500" fill="#5b5b5b" text-anchor="middle">Bottom-row piles stack upward, so this edge shows there.</text>
+  <text x="375" y="845" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#0b7f82" text-anchor="middle">Keep this index upright too (not rotated 180°).</text>
+  <text x="375" y="485" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="34" font-weight="700" fill="#5b5b5b" text-anchor="middle">Centre artwork</text>
+  <text x="375" y="525" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="21" font-weight="500" fill="#5b5b5b" text-anchor="middle">Only seen on the top card of a pile.</text>
+  <text x="375" y="553" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="21" font-weight="500" fill="#5b5b5b" text-anchor="middle">Amber bands (24%): visible in a normal fanned stack.</text>
+  <text x="375" y="581" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="21" font-weight="500" fill="#5b5b5b" text-anchor="middle">Corners are rounded by the app: leave them square.</text>
+  <text x="375" y="625" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#5b5b5b" text-anchor="middle">750 × 1050 px · save as S01.png … D13.png</text></svg>
