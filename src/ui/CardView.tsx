@@ -102,27 +102,61 @@ export const CardView = memo(function CardView({ card, x, y, z, size, backSrc, f
   const warn = useMotionValue(0);
   const appliedJump = useRef(0);
   const appliedShake = useRef(shake ?? 0);
+  const el = useRef<HTMLDivElement>(null);
+  /** The running deal flight (a Web Animation on the compositor) and where it lands. */
+  const dealFlight = useRef<{ anim: Animation; x: number; y: number } | null>(null);
 
-  // Flip: replay a short rotateY whenever the face changes after mount.
+  // Flip: replay a short flip whenever the face changes after mount. A new deal is different:
+  // every card flies out face-down and a face-up card turns over as it lands (`dealReveal`,
+  // seconds from now), instead of dozens of cards flipping at once under the stock.
+  const dealNonce = jump?.delay !== undefined ? jump.nonce : null;
+  const [seenDeal, setSeenDeal] = useState<number | null>(null);
+  const newDeal = dealNonce !== null && dealNonce !== seenDeal;
+  const [dealReveal, setDealReveal] = useState<number | null>(null);
+  if (newDeal) {
+    setSeenDeal(dealNonce);
+    setDealReveal(card.faceUp && jump?.delay ? jump.delay + MOTION.deal : card.faceUp && jump ? MOTION.deal : null);
+  }
   const [shownFace, setShownFace] = useState(card.faceUp);
-  const [flips, setFlips] = useState(0);
+  const [animateFlip, setAnimateFlip] = useState(false);
   if (shownFace !== card.faceUp) {
     setShownFace(card.faceUp);
-    setFlips((n) => n + 1);
+    setAnimateFlip(!newDeal);
+    if (!newDeal) setDealReveal(null);
   }
+  const revealing = dealReveal !== null && !reduce;
 
   useLayoutEffect(() => {
-    let delay = 0;
-    let duration: number = MOTION.move;
+    const targetY = y - (selected ? LIFT : 0);
     if (jump && jump.nonce !== appliedJump.current) {
       appliedJump.current = jump.nonce;
+      if (jump.delay !== undefined) {
+        // Deal: the card's real position is set at once, and the flight from the stock runs as a
+        // Web Animation on the compositor, so startup work or React rendering can't stall it.
+        mx.jump(x);
+        my.jump(targetY);
+        dealFlight.current?.anim.cancel();
+        dealFlight.current = null;
+        const node = el.current;
+        if (!reduce && node && typeof node.animate === 'function' && (jump.x !== x || jump.y !== targetY)) {
+          const anim = node.animate(
+            [{ transform: `translateX(${jump.x}px) translateY(${jump.y}px)` }, { transform: `translateX(${x}px) translateY(${targetY}px)` }],
+            { duration: MOTION.deal * 1000, delay: jump.delay * 1000, easing: 'ease-out', fill: 'backwards' },
+          );
+          dealFlight.current = { anim, x, y: targetY };
+        }
+        return;
+      }
       mx.jump(jump.x);
       my.jump(jump.y);
-      delay = jump.delay ?? 0;
-      if (jump.delay !== undefined) duration = MOTION.deal;
     }
-    const targetY = y - (selected ? LIFT : 0);
-    const opts = reduce ? { duration: 0 } : { duration: selected ? MOTION.lift : duration, ease: 'easeOut' as const, delay };
+    // Any new destination finishes a running deal flight at once (TAD §10.4).
+    const flight = dealFlight.current;
+    if (flight && (flight.x !== x || flight.y !== targetY)) {
+      flight.anim.finish();
+      dealFlight.current = null;
+    }
+    const opts = reduce ? { duration: 0 } : { duration: selected ? MOTION.lift : MOTION.move, ease: 'easeOut' as const };
     const ax = animate(mx, x, opts);
     const ay = animate(my, targetY, opts);
     return () => {
@@ -145,6 +179,7 @@ export const CardView = memo(function CardView({ card, x, y, z, size, backSrc, f
 
   return (
     <motion.div
+      ref={el}
       className="card absolute top-0 left-0"
       style={{ x: mx, y: my, width: size.w, height: size.h, zIndex: z, opacity: hidden ? 0 : 1 }}
       data-card={card.id}
@@ -153,10 +188,20 @@ export const CardView = memo(function CardView({ card, x, y, z, size, backSrc, f
       <motion.div className="absolute inset-0" style={{ x: shakeX }}>
         {/* Flip: a CSS animation on a fresh element whenever the face changes after mount.
             It runs on the compositor and leaves no 3D transform behind (no per-card 3D layers). */}
+        {revealing && (
+          <div className="absolute inset-0 overflow-hidden" style={{ borderRadius: size.radius }}>
+            <CardFace card={{ ...card, faceUp: false }} size={size} backSrc={backSrc} faces={faces} />
+          </div>
+        )}
         <div
-          key={String(card.faceUp)}
-          className={`absolute inset-0 overflow-hidden ${flips > 0 && !reduce ? 'card-flip' : ''}`}
-          style={{ borderRadius: size.radius, boxShadow: selected ? '0 6px 14px rgba(0,0,0,0.45)' : undefined }}
+          key={`${card.faceUp}-${revealing ? seenDeal : ''}`}
+          className={`absolute inset-0 overflow-hidden ${(animateFlip || revealing) && !reduce ? 'card-flip' : ''}`}
+          style={{
+            borderRadius: size.radius,
+            boxShadow: selected ? '0 6px 14px rgba(0,0,0,0.45)' : undefined,
+            // While dealing, the face waits edge-on (invisible, back showing) until the card lands.
+            ...(revealing ? { animationDelay: `${dealReveal}s`, animationFillMode: 'backwards' } : {}),
+          }}
         >
           <CardFace card={card} size={size} backSrc={backSrc} faces={faces} />
         </div>

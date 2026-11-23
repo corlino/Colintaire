@@ -60,16 +60,23 @@ interface Drag {
 
 let jumpNonce = 1;
 
-/** Deal animation: every tableau card flies in from the stock, 25 ms apart (TAD §10.4). */
-function dealJumps(layout: LayoutResult): Record<string, Jump> {
+/** Seconds to wait before the deal on a cold launch. */
+const FIRST_DEAL_DELAY = 0.25;
+
+/**
+ * Deal animation: every tableau card flies in from the stock, 25 ms apart (TAD §10.4).
+ * Every other card (the new stock) is a zero-length "deal" that just places it, so nothing slides.
+ */
+function dealJumps(layout: LayoutResult, startDelay = 0): Record<string, Jump> {
   const { stock } = layout.slots;
   const jumps: Record<string, Jump> = {};
   const nonce = jumpNonce++;
+  for (const c of layout.cards) if (c.pile.kind !== 'tableau') jumps[c.id] = { x: c.x, y: c.y, nonce, delay: 0 };
   layout.cards
     .filter((c) => c.pile.kind === 'tableau')
     .sort((a, b) => a.index - b.index || (a.pile.kind === 'tableau' && b.pile.kind === 'tableau' ? a.pile.index - b.pile.index : 0))
     .forEach((c, i) => {
-      jumps[c.id] = { x: stock.x, y: stock.y, nonce, delay: i * 0.025 };
+      jumps[c.id] = { x: stock.x, y: stock.y, nonce, delay: startDelay + i * 0.025 };
     });
   return jumps;
 }
@@ -112,7 +119,8 @@ export const Board = memo(function Board({ metrics }: { metrics: Metrics }) {
   // A new deal (new game or restart): play the deal animation and drop any selection.
   if (dealSeen !== dealId) {
     setDealSeen(dealId);
-    setJumps(animateDeal ? dealJumps(layout) : {});
+    // On first launch, hold the deal a moment so it doesn't overlap the app's first paint.
+    setJumps(animateDeal ? dealJumps(layout, dealSeen === null ? FIRST_DEAL_DELAY : 0) : {});
     setSelection(null);
     setDrag(null);
     setPeekPile(null);
