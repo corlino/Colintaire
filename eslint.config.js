@@ -13,6 +13,7 @@ export default tseslint.config(
     plugins: { 'react-hooks': reactHooks },
     rules: { ...reactHooks.configs.recommended.rules },
   },
+  { files: ['scripts/**/*.mjs'], languageOptions: { globals: { ...globals.node } } },
   // Layer rule (TAD §6): the engine is pure — no React, DOM, layout, store or assets.
   {
     files: ['src/engine/**/*.ts'],

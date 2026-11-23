@@ -11,7 +11,7 @@ Mobile-first Klondike Solitaire PWA with a custom 5+2 tableau. Vite + React 19 +
 
 ## Layers (imports only point downward)
 - `src/engine/` — pure rules, scoring, undo. No React, DOM, layout, store or assets (ESLint enforces).
-- `src/store/` — session concerns: Vegas ledger (`session.ts`), timer, modals.
+- `src/store/` — session concerns: Vegas ledger (`session.ts`), timer, modals, localStorage (`persistence.ts`, `autosave.ts`).
 - `src/layout/` — pure `computeLayout`: 7-pile board → 5+2 screen positions. Orientation lives only here.
 - `src/ui/` — React components. Never decides move legality; dispatches actions to the engine.
 - `src/assets/` — registries for themes, card backs, card faces.
@@ -22,6 +22,6 @@ Mobile-first Klondike Solitaire PWA with a custom 5+2 tableau. Vite + React 19 +
 - All art is placeholder until the owner supplies PNGs in `art/` (TAD §12.5).
 
 ## Commands
-`npm run dev` (add `-- --host` to test on a phone over Wi-Fi) · `npm run test` · `npm run coverage` · `npm run e2e` (Playwright: iPhone 13 mini, iPhone 15 Pro Max, Desktop Chrome) · `npm run check` · `npm run build`
+`npm run dev` (add `-- --host` to test on a phone over Wi-Fi) · `npm run test` · `npm run coverage` · `npm run e2e` (Playwright: iPhone 13 mini, iPhone 15 Pro Max, Desktop Chrome) · `npm run check` · `npm run build` · `npm run assets` (regenerate icons from `art/`)
 
 Dev-only hook for tests and manual checks: `window.__colintaire.newGame({ seed, mode })`, `.loadGame(state)`, `.getState()`.

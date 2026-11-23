@@ -185,3 +185,53 @@ test('Appearance opens over the game and closes without changing it (AC 27)', as
   await expect(dialog).toBeHidden();
   expect(await getState(page)).toEqual(before);
 });
+
+test('a reload keeps the game, the Vegas balance and the time (U12, U13)', async ({ page }) => {
+  await page.getByRole('button', { name: /Solitaire/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'New Game' });
+  await dialog.getByRole('radio', { name: 'Vegas' }).click();
+  await dialog.getByRole('button', { name: 'Confirm' }).click();
+  await page.waitForTimeout(1500); // deal animation
+  const box = (await page.getByTestId('stock').boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await page.waitForTimeout(1500); // past the 250 ms save debounce, with time on the clock
+  const before = await getState(page);
+
+  await page.reload();
+  await page.waitForFunction(() => !!window.__colintaire);
+  expect(await getState(page)).toEqual(before);
+  await expect(page.getByRole('group', { name: 'Score −$52' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Moves 1' })).toBeVisible();
+  await expect(page.getByRole('group', { name: /^Time 0:0[1-9]/ })).toBeVisible();
+
+  // The next New Game remembers Vegas (U17).
+  await page.getByRole('button', { name: /Solitaire/ }).click();
+  await expect(page.getByRole('dialog', { name: 'New Game' }).getByRole('radio', { name: 'Vegas' })).toHaveAttribute('aria-checked', 'true');
+});
+
+test('a corrupt save still launches a fresh game (TAD §14)', async ({ page }) => {
+  await page.evaluate(() => {
+    localStorage.setItem('colintaire:game:v1', '{"v":1,"data":{"state":{"nope":true}}}');
+    localStorage.setItem('colintaire:vegas:v1', 'garbage');
+  });
+  await page.reload();
+  await page.waitForFunction(() => !!window.__colintaire);
+  const s = await getState(page);
+  expect(s.mode).toBe('classic');
+  expect(s.moves).toBe(0);
+});
+
+test('a phone turned sideways shows the rotate message and pauses the timer (U21)', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'Phones only');
+  const portrait = page.viewportSize()!;
+  await page.setViewportSize({ width: portrait.height, height: portrait.width });
+  const overlay = page.getByTestId('rotate-overlay');
+  await expect(overlay).toBeVisible();
+  await expect(overlay).toContainText('Rotate your phone');
+  const time = page.getByRole('group', { name: /^Time / });
+  const t1 = await time.getAttribute('aria-label');
+  await page.waitForTimeout(1500);
+  expect(await time.getAttribute('aria-label')).toBe(t1);
+  await page.setViewportSize(portrait);
+  await expect(overlay).toBeHidden();
+});

@@ -76,6 +76,7 @@ export function Board({ metrics }: { metrics: Metrics }) {
   const game = useGameStore((s) => s.session.game);
   const settings = useGameStore((s) => s.settings);
   const dealId = useGameStore((s) => s.dealId);
+  const animateDeal = useGameStore((s) => s.animateDeal);
   const restartGame = useGameStore((s) => s.restartGame);
   const dispatch = useGameStore((s) => s.dispatch);
   const board = game.board;
@@ -105,7 +106,7 @@ export function Board({ metrics }: { metrics: Metrics }) {
   // A new deal (new game or restart): play the deal animation and drop any selection.
   if (dealSeen !== dealId) {
     setDealSeen(dealId);
-    setJumps(dealJumps(layout));
+    setJumps(animateDeal ? dealJumps(layout) : {});
     setSelection(null);
     setDrag(null);
     setPeekPile(null);

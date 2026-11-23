@@ -1,12 +1,13 @@
 /**
  * The one Zustand store (TAD §4): wraps the pure engine and session logic with
  * session concerns — the timer, modal state and pause reasons.
- * Persistence is added in M5.
+ * Saving lives in autosave.ts; `restore` applies what persistence.ts loaded.
  */
 import { create } from 'zustand';
 import { applyAction, newGame, randomSeed, type Action, type GameMode, type GameState, type Result } from '../engine';
 import { DEFAULTS } from '../assets/registry';
 import { confirmNewGame, EMPTY_LEDGER, resetVegasBalance, restart, type Session } from './session';
+import type { Saved } from './persistence';
 import { syncTimer, TIMER_ZERO, type PauseReason, type TimerState } from './timer';
 
 export interface Settings {
@@ -29,6 +30,8 @@ export interface GameStore {
   readonly activeModal: ModalName | null;
   /** Increments on every new deal (new game or restart) so the board can play the deal animation. */
   readonly dealId: number;
+  /** False after restoring a saved game, so reopening the app does not replay the deal. */
+  readonly animateDeal: boolean;
 
   dispatch(action: Action): Result;
   startNewGame(mode: GameMode): void;
@@ -41,6 +44,8 @@ export interface GameStore {
   setPaused(reason: PauseReason, paused: boolean): void;
   /** Development/test only: load a specific game. */
   loadGame(game: GameState): void;
+  /** Apply saved records at launch (TAD §14). Missing records keep their defaults. */
+  restore(saved: Saved): void;
 }
 
 const now = () => Date.now();
@@ -61,7 +66,7 @@ export const useGameStore = create<GameStore>()((set, get) => {
     clearTimeout(winTimeout);
     set((s) => {
       const pauseReasons = s.pauseReasons.filter((r) => r !== 'modal');
-      return withSyncedTimer({ ...s, ...extra, session, timer: TIMER_ZERO, pauseReasons, activeModal: null, dealId: s.dealId + 1 });
+      return withSyncedTimer({ ...s, ...extra, session, timer: TIMER_ZERO, pauseReasons, activeModal: null, dealId: s.dealId + 1, animateDeal: true });
     });
   };
 
@@ -72,6 +77,7 @@ export const useGameStore = create<GameStore>()((set, get) => {
     pauseReasons: [],
     activeModal: null,
     dealId: 0,
+    animateDeal: true,
 
     dispatch(action) {
       const result = applyAction(get().session.game, action);
@@ -118,6 +124,26 @@ export const useGameStore = create<GameStore>()((set, get) => {
     },
     loadGame(game) {
       deal({ ...get().session, game });
+    },
+    restore(saved) {
+      clearTimeout(winTimeout);
+      set((s) => {
+        const settings = saved.settings ?? s.settings;
+        const ledger = saved.vegas ?? s.session.ledger;
+        if (!saved.game) return { ...s, settings, session: { ...s.session, ledger } };
+        // A game saved after its win reopens on the win screen.
+        const won = saved.game.state.status === 'won';
+        const pauseReasons = won ? [...s.pauseReasons.filter((r) => r !== 'modal'), 'modal' as const] : s.pauseReasons;
+        return withSyncedTimer({
+          ...s,
+          settings,
+          session: { ledger, game: saved.game.state },
+          timer: saved.game.timer,
+          pauseReasons,
+          activeModal: won ? ('win' as const) : null,
+          animateDeal: false,
+        });
+      });
     },
   };
 });

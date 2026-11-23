@@ -5,6 +5,7 @@ import { computeMetrics } from '../layout';
 import { useGameStore } from '../store/gameStore';
 import { elapsedMs } from '../store/timer';
 import { Board } from './Board';
+import { RotateOverlay } from './RotateOverlay';
 import { AppearanceModal } from './modals/AppearanceModal';
 import { NewGameModal } from './modals/NewGameModal';
 import { WinModal } from './modals/WinModal';
@@ -102,6 +103,7 @@ export function App() {
         {activeModal === 'appearance' && <AppearanceModal key="appearance" />}
         {activeModal === 'win' && <WinModal key="win" />}
       </AnimatePresence>
+      <RotateOverlay />
     </div>
   );
 }
