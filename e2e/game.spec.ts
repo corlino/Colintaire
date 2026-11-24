@@ -235,3 +235,26 @@ test('a phone turned sideways shows the rotate message and pauses the timer (U21
   await page.setViewportSize(portrait);
   await expect(overlay).toBeHidden();
 });
+
+test('a selected card can be opened large, turned over and closed, and stays selected', async ({ page }) => {
+  await loadBoard(page, { tableau: [[card('S09')], [card('H08')], [], [], [], [], []] });
+  await expect(page.getByRole('button', { name: 'Inspect card' })).toHaveCount(0);
+  const at = await centre(page, 'H08');
+  await page.mouse.click(at.x, at.y);
+  await page.waitForTimeout(400); // past the double-tap window
+  await page.getByRole('button', { name: 'Inspect card' }).click();
+
+  const dialog = page.getByRole('dialog', { name: '8 of hearts' });
+  await expect(dialog).toBeVisible();
+  const flip = page.getByRole('button', { name: 'Flip card' });
+  await flip.click();
+  await expect(flip).toHaveAttribute('data-side', 'back');
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(dialog).toHaveCount(0);
+
+  // Still selected: the eye is still there, and a tap on the 9♠ moves the 8♥ onto it.
+  await expect(page.getByRole('button', { name: 'Inspect card' })).toBeVisible();
+  const target = await centre(page, 'S09');
+  await page.mouse.click(target.x, target.y);
+  await expect.poll(async () => (await getState(page)).board.tableau[0]!.map((c) => c.id)).toEqual(['S09', 'H08']);
+});

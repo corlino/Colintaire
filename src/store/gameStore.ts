@@ -4,7 +4,7 @@
  * Saving lives in autosave.ts; `restore` applies what persistence.ts loaded.
  */
 import { create } from 'zustand';
-import { applyAction, newGame, randomSeed, type Action, type GameMode, type GameState, type Result } from '../engine';
+import { applyAction, newGame, randomSeed, type Action, type CardId, type GameMode, type GameState, type Result } from '../engine';
 import { DEFAULTS } from '../assets/registry';
 import { confirmNewGame, EMPTY_LEDGER, resetVegasBalance, restart, type Session } from './session';
 import type { Saved } from './persistence';
@@ -17,7 +17,7 @@ export interface Settings {
   readonly lastMode: GameMode;
 }
 
-export type ModalName = 'appearance' | 'newGame' | 'win';
+export type ModalName = 'appearance' | 'newGame' | 'win' | 'inspect';
 
 /** Delay before the win modal appears after the last foundation move (TAD §11.2). */
 export const WIN_MODAL_DELAY = 400;
@@ -28,6 +28,8 @@ export interface GameStore {
   readonly timer: TimerState;
   readonly pauseReasons: readonly PauseReason[];
   readonly activeModal: ModalName | null;
+  /** The card the inspect view shows (kept after closing so the view can animate out). */
+  readonly inspectCardId: CardId | null;
   /** Increments on every new deal (new game or restart) so the board can play the deal animation. */
   readonly dealId: number;
   /** False after restoring a saved game, so reopening the app does not replay the deal. */
@@ -41,6 +43,8 @@ export interface GameStore {
   setCardBack(id: string): void;
   setCardFace(id: string): void;
   openModal(name: ModalName): void;
+  /** Open the inspect view on a card. Like any modal it pauses the timer and never touches the game. */
+  inspect(cardId: CardId): void;
   closeModal(): void;
   setPaused(reason: PauseReason, paused: boolean): void;
   /** Development/test only: load a specific game. */
@@ -77,6 +81,7 @@ export const useGameStore = create<GameStore>()((set, get) => {
     timer: { accumulatedMs: 0, startedAt: now() },
     pauseReasons: [],
     activeModal: null,
+    inspectCardId: null,
     dealId: 0,
     animateDeal: true,
 
@@ -114,6 +119,10 @@ export const useGameStore = create<GameStore>()((set, get) => {
         const pauseReasons = s.pauseReasons.includes('modal') ? s.pauseReasons : [...s.pauseReasons, 'modal' as const];
         return withSyncedTimer({ ...s, activeModal: name, pauseReasons });
       });
+    },
+    inspect(cardId) {
+      set({ inspectCardId: cardId });
+      get().openModal('inspect');
     },
     closeModal() {
       set((s) => withSyncedTimer({ ...s, activeModal: null, pauseReasons: s.pauseReasons.filter((r) => r !== 'modal') }));

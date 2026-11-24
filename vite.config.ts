@@ -44,6 +44,15 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
+        // Full-size card art is only for the inspect view: fetch on demand, then keep it for offline use.
+        globIgnores: ['**/art/**/large/**'],
+        runtimeCaching: [
+          {
+            urlPattern: /\/art\/.+\/large\/.+\.webp$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'card-art-large', expiration: { maxEntries: 120 } },
+          },
+        ],
         navigateFallback: '/index.html',
         cleanupOutdatedCaches: true,
       },

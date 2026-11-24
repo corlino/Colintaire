@@ -9,7 +9,10 @@ export interface GeneratedTheme {
 export const GENERATED: {
   readonly themes: Readonly<Record<string, GeneratedTheme>>;
   readonly cardBacks: Readonly<Record<string, string>>;
+  /** Full-size (750 × 1050) backs and faces for the inspect view. */
+  readonly cardBacksLarge: Readonly<Record<string, string>>;
   readonly cardFaces: Readonly<Record<string, Readonly<Record<string, string>>>>;
+  readonly cardFacesLarge: Readonly<Record<string, Readonly<Record<string, string>>>>;
   /** Brand marks by name (e.g. "silver"); aspect is width / height. */
   readonly brand: Readonly<Record<string, { readonly src: string; readonly aspect: number }>>;
 } = {
@@ -21,6 +24,9 @@ export const GENERATED: {
   },
   "cardBacks": {
     "entities-back": "/art/card-backs/entities-back/back.webp"
+  },
+  "cardBacksLarge": {
+    "entities-back": "/art/card-backs/entities-back/large/back.webp"
   },
   "cardFaces": {
     "entities-pack": {
@@ -76,6 +82,62 @@ export const GENERATED: {
       "D11": "/art/card-faces/entities-pack/D11.webp",
       "D12": "/art/card-faces/entities-pack/D12.webp",
       "D13": "/art/card-faces/entities-pack/D13.webp"
+    }
+  },
+  "cardFacesLarge": {
+    "entities-pack": {
+      "S01": "/art/card-faces/entities-pack/large/S01.webp",
+      "S02": "/art/card-faces/entities-pack/large/S02.webp",
+      "S03": "/art/card-faces/entities-pack/large/S03.webp",
+      "S04": "/art/card-faces/entities-pack/large/S04.webp",
+      "S05": "/art/card-faces/entities-pack/large/S05.webp",
+      "S06": "/art/card-faces/entities-pack/large/S06.webp",
+      "S07": "/art/card-faces/entities-pack/large/S07.webp",
+      "S08": "/art/card-faces/entities-pack/large/S08.webp",
+      "S09": "/art/card-faces/entities-pack/large/S09.webp",
+      "S10": "/art/card-faces/entities-pack/large/S10.webp",
+      "S11": "/art/card-faces/entities-pack/large/S11.webp",
+      "S12": "/art/card-faces/entities-pack/large/S12.webp",
+      "S13": "/art/card-faces/entities-pack/large/S13.webp",
+      "H01": "/art/card-faces/entities-pack/large/H01.webp",
+      "H02": "/art/card-faces/entities-pack/large/H02.webp",
+      "H03": "/art/card-faces/entities-pack/large/H03.webp",
+      "H04": "/art/card-faces/entities-pack/large/H04.webp",
+      "H05": "/art/card-faces/entities-pack/large/H05.webp",
+      "H06": "/art/card-faces/entities-pack/large/H06.webp",
+      "H07": "/art/card-faces/entities-pack/large/H07.webp",
+      "H08": "/art/card-faces/entities-pack/large/H08.webp",
+      "H09": "/art/card-faces/entities-pack/large/H09.webp",
+      "H10": "/art/card-faces/entities-pack/large/H10.webp",
+      "H11": "/art/card-faces/entities-pack/large/H11.webp",
+      "H12": "/art/card-faces/entities-pack/large/H12.webp",
+      "H13": "/art/card-faces/entities-pack/large/H13.webp",
+      "C01": "/art/card-faces/entities-pack/large/C01.webp",
+      "C02": "/art/card-faces/entities-pack/large/C02.webp",
+      "C03": "/art/card-faces/entities-pack/large/C03.webp",
+      "C04": "/art/card-faces/entities-pack/large/C04.webp",
+      "C05": "/art/card-faces/entities-pack/large/C05.webp",
+      "C06": "/art/card-faces/entities-pack/large/C06.webp",
+      "C07": "/art/card-faces/entities-pack/large/C07.webp",
+      "C08": "/art/card-faces/entities-pack/large/C08.webp",
+      "C09": "/art/card-faces/entities-pack/large/C09.webp",
+      "C10": "/art/card-faces/entities-pack/large/C10.webp",
+      "C11": "/art/card-faces/entities-pack/large/C11.webp",
+      "C12": "/art/card-faces/entities-pack/large/C12.webp",
+      "C13": "/art/card-faces/entities-pack/large/C13.webp",
+      "D01": "/art/card-faces/entities-pack/large/D01.webp",
+      "D02": "/art/card-faces/entities-pack/large/D02.webp",
+      "D03": "/art/card-faces/entities-pack/large/D03.webp",
+      "D04": "/art/card-faces/entities-pack/large/D04.webp",
+      "D05": "/art/card-faces/entities-pack/large/D05.webp",
+      "D06": "/art/card-faces/entities-pack/large/D06.webp",
+      "D07": "/art/card-faces/entities-pack/large/D07.webp",
+      "D08": "/art/card-faces/entities-pack/large/D08.webp",
+      "D09": "/art/card-faces/entities-pack/large/D09.webp",
+      "D10": "/art/card-faces/entities-pack/large/D10.webp",
+      "D11": "/art/card-faces/entities-pack/large/D11.webp",
+      "D12": "/art/card-faces/entities-pack/large/D12.webp",
+      "D13": "/art/card-faces/entities-pack/large/D13.webp"
     }
   },
   "brand": {

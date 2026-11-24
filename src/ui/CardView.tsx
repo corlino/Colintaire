@@ -37,17 +37,18 @@ function ClassicFace({ card, size }: { card: Card; size: CardSize }) {
   const label = rankLabel(card.rank);
   const pad = Math.max(3, Math.round(size.w * 0.07));
   const suitSize = Math.round(size.rankFont * 0.8);
+  const edge = Math.max(2, Math.round(size.w * 0.035)); // 2 px on the board; grows on the large inspect card
   const row = 'absolute inset-x-0 flex items-center justify-between font-bold leading-none';
   return (
     <div className={`absolute inset-0 bg-card-face ${color}`} style={{ borderRadius: size.radius }}>
-      <div className={row} style={{ top: 2, paddingInline: pad, fontSize: size.rankFont, height: size.rankFont }}>
+      <div className={row} style={{ top: edge, paddingInline: pad, fontSize: size.rankFont, height: size.rankFont }}>
         <span>{label}</span>
         <SuitIcon suit={card.suit} size={suitSize} />
       </div>
       <div className="absolute inset-0 flex items-center justify-center">
         <SuitIcon suit={card.suit} size={Math.round(size.w * 0.42)} />
       </div>
-      <div className={row} style={{ bottom: 2, paddingInline: pad, fontSize: size.rankFont, height: size.rankFont }}>
+      <div className={row} style={{ bottom: edge, paddingInline: pad, fontSize: size.rankFont, height: size.rankFont }}>
         <SuitIcon suit={card.suit} size={suitSize} />
         <span>{label}</span>
       </div>

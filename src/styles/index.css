@@ -47,6 +47,7 @@
   --duration-fast: 100ms;
   --duration-normal: 200ms;
   --duration-slow: 250ms;
+  --duration-inspect-flip: 450ms;
 }
 
 /* Type scale (Style Guide §4.2, TAD §13) */
@@ -165,5 +166,29 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .card-flip {
     animation: none;
+  }
+}
+
+/* Inspect view: a two-sided card that turns over in 3D. */
+.inspect-card {
+  transform-style: preserve-3d;
+  transition: transform var(--duration-inspect-flip) cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+.inspect-card.is-back {
+  transform: rotateY(180deg);
+}
+.inspect-side {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.inspect-back {
+  transform: rotateY(180deg);
+}
+.inspect-card.reduce {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .inspect-card {
+    transition: none;
   }
 }

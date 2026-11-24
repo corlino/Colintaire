@@ -1,4 +1,4 @@
-import { ArrowPathIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, ArrowUturnLeftIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { animate, motion, useMotionValue, useReducedMotion } from 'motion/react';
 import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { CARD_BACKS, CARD_FACES, DEFAULTS, pick, THEMES } from '../assets/registry';
@@ -139,6 +139,8 @@ export const Board = memo(function Board({ metrics }: { metrics: Metrics }) {
 
   const runIds = (from: PileRef, cardIndex: number) => (pileAt(board, from) ?? []).slice(cardIndex).map((c) => c.id);
   const selectedIds = new Set(selection ? runIds(selection.from, selection.cardIndex) : []);
+  /** The card the player tapped (the top of a selected run). */
+  const selectedCard = selection ? pileAt(board, selection.from)?.[selection.cardIndex] : undefined;
   const draggedIds = new Set(drag?.ids ?? []);
 
   const active = drag && !drag.returning ? drag : selection;
@@ -507,9 +509,19 @@ export const Board = memo(function Board({ metrics }: { metrics: Metrics }) {
         <DragLayer drag={drag} cards={drag.ids.map((id) => cardById.get(id)!)} size={size} offset={metrics.offsets.up} backSrc={back.src} faces={faces} onReturned={finishReturn} />
       )}
 
-      <ControlButton label="Appearance" onClick={() => useGameStore.getState().openModal('appearance')} style={{ ...box(slots.appearance), zIndex: 400 }}>
-        <CroppedPreview aspect={PREVIEW_ASPECT.theme} background={theme.preview} className="size-7 ring-1 ring-white/40" />
-      </ControlButton>
+      {/* While a card is selected, the Appearance button becomes an eye that opens it large. */}
+      {selectedCard ? (
+        <ControlButton
+          label="Inspect card"
+          icon={EyeIcon}
+          onClick={() => useGameStore.getState().inspect(selectedCard.id)}
+          style={{ ...box(slots.appearance), zIndex: 400 }}
+        />
+      ) : (
+        <ControlButton label="Appearance" onClick={() => useGameStore.getState().openModal('appearance')} style={{ ...box(slots.appearance), zIndex: 400 }}>
+          <CroppedPreview aspect={PREVIEW_ASPECT.theme} background={theme.preview} className="size-7 ring-1 ring-white/40" />
+        </ControlButton>
+      )}
       <ControlButton
         label="Undo"
         icon={ArrowUturnLeftIcon}

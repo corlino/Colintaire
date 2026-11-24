@@ -51,6 +51,21 @@ describe('timer and modals (Style Guide 9.1, PRD 8.3)', () => {
   });
 });
 
+describe('inspect view', () => {
+  it('opens on the chosen card, pauses the timer like any modal and leaves the game alone', () => {
+    const before = store().session;
+    vi.setSystemTime(4000);
+    store().inspect('H08');
+    expect(store().activeModal).toBe('inspect');
+    expect(store().inspectCardId).toBe('H08');
+    vi.setSystemTime(9000);
+    expect(elapsed()).toBe(4000);
+    store().closeModal();
+    expect(store().activeModal).toBeNull();
+    expect(store().session).toBe(before);
+  });
+});
+
 describe('new game, restart and win', () => {
   it('confirming a new game deals fresh, resets the timer and closes the modal', () => {
     vi.setSystemTime(30_000);

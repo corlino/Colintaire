@@ -28,6 +28,8 @@ export interface CardBackAsset {
   readonly name: string;
   /** Image URL, 5:7 ratio. */
   readonly src: string;
+  /** Full-size image for the inspect view, when there is one. */
+  readonly srcLarge?: string;
 }
 
 export interface CardFaceSet {
@@ -36,6 +38,8 @@ export interface CardFaceSet {
   /** 'rendered' draws faces in code; 'images' (future) uses 52 files keyed S01…D13. */
   readonly kind: 'rendered' | 'images';
   readonly images?: Readonly<Record<string, string>>;
+  /** Full-size images for the inspect view, keyed like `images`. */
+  readonly imagesLarge?: Readonly<Record<string, string>>;
 }
 
 const DEFAULT_SCRIM = 'rgba(0, 0, 0, 0.25)';
@@ -72,7 +76,9 @@ const url = (path: string) => `url("${path}")`;
 interface Generated {
   readonly themes: Readonly<Record<string, GeneratedTheme>>;
   readonly cardBacks: Readonly<Record<string, string>>;
+  readonly cardBacksLarge?: Readonly<Record<string, string>>;
   readonly cardFaces: Readonly<Record<string, Readonly<Record<string, string>>>>;
+  readonly cardFacesLarge?: Readonly<Record<string, Readonly<Record<string, string>>>>;
   readonly brand?: Readonly<Record<string, { readonly src: string; readonly aspect: number }>>;
 }
 
@@ -92,13 +98,15 @@ export function withArt(
   const themes = base.themes.map((t) => (gen.themes[t.id] ? themeFrom(t.id, gen.themes[t.id]!, t) : t));
   for (const [id, g] of Object.entries(gen.themes)) if (!themes.some((t) => t.id === id)) themes.push(themeFrom(id, g));
 
-  const backs = base.backs.map((b) => (gen.cardBacks[b.id] ? { ...b, src: gen.cardBacks[b.id]! } : b));
-  for (const [id, src] of Object.entries(gen.cardBacks)) if (!backs.some((b) => b.id === id)) backs.push({ id, name: titleFromId(id), src });
+  const large = (id: string) => (gen.cardBacksLarge?.[id] ? { srcLarge: gen.cardBacksLarge[id] } : {});
+  const backs = base.backs.map((b) => (gen.cardBacks[b.id] ? { ...b, src: gen.cardBacks[b.id]!, ...large(b.id) } : b));
+  for (const [id, src] of Object.entries(gen.cardBacks)) if (!backs.some((b) => b.id === id)) backs.push({ id, name: titleFromId(id), src, ...large(id) });
 
   const faces = [...base.faces];
   for (const [id, images] of Object.entries(gen.cardFaces)) {
     const i = faces.findIndex((f) => f.id === id);
-    const set: CardFaceSet = { id, name: faces[i]?.name ?? titleFromId(id), kind: 'images', images };
+    const imagesLarge = gen.cardFacesLarge?.[id];
+    const set: CardFaceSet = { id, name: faces[i]?.name ?? titleFromId(id), kind: 'images', images, ...(imagesLarge ? { imagesLarge } : {}) };
     if (i >= 0) faces[i] = set;
     else faces.push(set);
   }

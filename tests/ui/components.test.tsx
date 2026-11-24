@@ -10,6 +10,7 @@ import { App } from '../../src/ui/App';
 import { Board } from '../../src/ui/Board';
 import { formatTime, formatVegas } from '../../src/ui/format';
 import { AppearanceModal } from '../../src/ui/modals/AppearanceModal';
+import { InspectView } from '../../src/ui/modals/InspectView';
 import { NewGameModal } from '../../src/ui/modals/NewGameModal';
 import { StatsPanel, statValueClass } from '../../src/ui/StatsPanel';
 import { cs, stateWith } from '../helpers';
@@ -180,6 +181,60 @@ describe('keyboard and screen-reader play (desktop, TAD §13)', () => {
     render(<Board metrics={computeMetrics(343, 560)} />);
     key(screen.getByRole('button', { name: /^Stock, 1 card\./ }), 'Enter');
     expect(screen.getByTestId('announcer')).toHaveTextContent('Drew 5 of clubs');
+  });
+});
+
+describe('inspect a selected card', () => {
+  const key = (el: HTMLElement, k: string) => fireEvent.keyDown(el, { key: k });
+
+  it('swaps Appearance for an eye while a card is selected, and opens the inspect view on it', () => {
+    act(() => store().loadGame(stateWith({ tableau: [cs('S09'), cs('H08'), [], [], [], [], []] })));
+    render(<Board metrics={computeMetrics(343, 560)} />);
+    expect(screen.getByRole('button', { name: 'Appearance' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Inspect card' })).toBeNull();
+
+    const pile2 = screen.getByRole('button', { name: /^Pile 2/ });
+    key(pile2, 'Enter');
+    expect(screen.queryByRole('button', { name: 'Appearance' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Inspect card' }));
+    expect(store().activeModal).toBe('inspect');
+    expect(store().inspectCardId).toBe('H08');
+    expect(pile2).toHaveAttribute('aria-pressed', 'true'); // still selected afterwards
+
+    key(pile2, 'Escape');
+    expect(screen.getByRole('button', { name: 'Appearance' })).toBeInTheDocument();
+  });
+
+  it('shows the card large, flips to the back on tap, and closes with X or Escape', () => {
+    act(() => {
+      store().loadGame(stateWith({ tableau: [cs('S09'), cs('H08'), [], [], [], [], []] }));
+      store().inspect('H08');
+    });
+    render(<InspectView />);
+    expect(screen.getByRole('dialog', { name: '8 of hearts' })).toBeInTheDocument();
+    const flip = screen.getByRole('button', { name: 'Flip card' });
+    expect(flip).toHaveAttribute('data-side', 'front');
+    fireEvent.click(flip);
+    expect(flip).toHaveAttribute('data-side', 'back');
+    fireEvent.click(flip);
+    expect(flip).toHaveAttribute('data-side', 'front');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(store().activeModal).toBeNull();
+
+    act(() => store().inspect('H08'));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(store().activeModal).toBeNull();
+  });
+
+  it('closes when the dark area around the card is tapped', () => {
+    act(() => {
+      store().loadGame(stateWith({ tableau: [cs('S09'), cs('H08'), [], [], [], [], []] }));
+      store().inspect('H08');
+    });
+    render(<InspectView />);
+    fireEvent.click(screen.getByTestId('inspect-backdrop'));
+    expect(store().activeModal).toBeNull();
   });
 });
 

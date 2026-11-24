@@ -5,6 +5,7 @@
  *   art/themes/<id>/background-wide.png   → public/art/themes/<id>/background-wide.webp   (optional)
  *   art/card-backs/<id>/back.png          → public/art/card-backs/<id>/back.webp   (or the folder's only image)
  *   art/card-faces/<set>/S01.png … D13.png → public/art/card-faces/<set>/S01.webp …   (all 52 required)
+ *   Backs and faces also get a full-size copy in …/large/ for the inspect view (not precached).
  *   art/brand/logo-<name>.png             → public/art/brand/logo-<name>.webp  (trimmed, transparent, 256 px tall)
  *   art/icons/icon-1024.png               → public/icons/*.png   (placeholder from the card back otherwise)
  *
@@ -26,6 +27,8 @@ export const SIZES = {
   background: { width: 1290, height: 2796 },
   backgroundWide: { width: 2560, height: 1440 },
   card: { width: 300, height: 420 },
+  /** Full-size copy for the inspect view; fetched only when a card is opened large. */
+  cardLarge: { width: 750, height: 1050 },
   logoHeight: 256,
 };
 
@@ -70,7 +73,7 @@ async function checkSize(src, want, warnings) {
 /** Build everything. Paths are parameters so tests can run against fixtures. */
 export async function buildAssets({ artDir = 'art', publicDir = 'public', manifestPath = 'src/assets/generated.ts', iconSource = 'src/assets/placeholders/teal-geometric.svg', log = console.log } = {}) {
   const warnings = [];
-  const out = { themes: {}, cardBacks: {}, cardFaces: {}, brand: {} };
+  const out = { themes: {}, cardBacks: {}, cardBacksLarge: {}, cardFaces: {}, cardFacesLarge: {}, brand: {} };
   const artOut = join(publicDir, 'art');
   rmSync(artOut, { recursive: true, force: true }); // no stale files from removed art
 
@@ -101,7 +104,10 @@ export async function buildAssets({ artDir = 'art', publicDir = 'public', manife
     mkdirSync(dir, { recursive: true });
     await checkSize(src, { width: 750, height: 1050 }, warnings);
     await webp(src, join(dir, 'back.webp'), SIZES.card, 85);
+    mkdirSync(join(dir, 'large'), { recursive: true });
+    await webp(src, join(dir, 'large', 'back.webp'), SIZES.cardLarge, 85);
     out.cardBacks[id] = `/art/card-backs/${id}/back.webp`;
+    out.cardBacksLarge[id] = `/art/card-backs/${id}/large/back.webp`;
     log(`card back ${id}`);
   }
 
@@ -113,13 +119,17 @@ export async function buildAssets({ artDir = 'art', publicDir = 'public', manife
       continue;
     }
     const dir = join(artOut, 'card-faces', id);
-    mkdirSync(dir, { recursive: true });
+    mkdirSync(join(dir, 'large'), { recursive: true });
     const images = {};
+    const large = {};
     for (const f of FACE_IDS) {
       await webp(join(srcDir, `${f}.png`), join(dir, `${f}.webp`), SIZES.card, 85);
+      await webp(join(srcDir, `${f}.png`), join(dir, 'large', `${f}.webp`), SIZES.cardLarge, 85);
       images[f] = `/art/card-faces/${id}/${f}.webp`;
+      large[f] = `/art/card-faces/${id}/large/${f}.webp`;
     }
     out.cardFaces[id] = images;
+    out.cardFacesLarge[id] = large;
     log(`card faces ${id}`);
   }
 
@@ -151,7 +161,10 @@ export interface GeneratedTheme {
 export const GENERATED: {
   readonly themes: Readonly<Record<string, GeneratedTheme>>;
   readonly cardBacks: Readonly<Record<string, string>>;
+  /** Full-size (750 × 1050) backs and faces for the inspect view. */
+  readonly cardBacksLarge: Readonly<Record<string, string>>;
   readonly cardFaces: Readonly<Record<string, Readonly<Record<string, string>>>>;
+  readonly cardFacesLarge: Readonly<Record<string, Readonly<Record<string, string>>>>;
   /** Brand marks by name (e.g. "silver"); aspect is width / height. */
   readonly brand: Readonly<Record<string, { readonly src: string; readonly aspect: number }>>;
 } = ${JSON.stringify(out, null, 2)};

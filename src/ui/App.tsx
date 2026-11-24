@@ -6,6 +6,7 @@ import { useGameStore } from '../store/gameStore';
 import { Board } from './Board';
 import { RotateOverlay } from './RotateOverlay';
 import { AppearanceModal } from './modals/AppearanceModal';
+import { InspectView } from './modals/InspectView';
 import { NewGameModal } from './modals/NewGameModal';
 import { WinModal } from './modals/WinModal';
 import { SHELL } from './shellSizes';
@@ -108,6 +109,7 @@ export function App() {
         {activeModal === 'newGame' && <NewGameModal key="newGame" />}
         {activeModal === 'appearance' && <AppearanceModal key="appearance" />}
         {activeModal === 'win' && <WinModal key="win" />}
+        {activeModal === 'inspect' && <InspectView key="inspect" />}
       </AnimatePresence>
       <RotateOverlay />
     </div>
