@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="750" height="1050" viewBox="0 0 750 1050"><rect width="750" height="1050" fill="#ffffff"/>
+  <!-- Strips that show on face-down cards in a stack -->
+  <rect x="0" y="0" width="750" height="105" fill="#e0a030" fill-opacity="0.12"/>
+  <rect x="0" y="0" width="750" height="53" fill="#12c5c8" fill-opacity="0.16"/>
+  <rect x="0" y="945" width="750" height="105" fill="#e0a030" fill-opacity="0.12"/>
+  <rect x="0" y="997" width="750" height="53" fill="#12c5c8" fill-opacity="0.16"/>
+  <line x1="0" y1="53" x2="750" y2="53" stroke="#12c5c8" stroke-width="3" stroke-dasharray="14 10"/> <line x1="0" y1="105" x2="750" y2="105" stroke="#e0a030" stroke-width="3" stroke-dasharray="14 10"/> <line x1="0" y1="997" x2="750" y2="997" stroke="#12c5c8" stroke-width="3" stroke-dasharray="14 10"/> <line x1="0" y1="945" x2="750" y2="945" stroke="#e0a030" stroke-width="3" stroke-dasharray="14 10"/>
+  <text x="738" y="131" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#e0a030" text-anchor="end">105 px · 10%</text> <text x="738" y="935" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#e0a030" text-anchor="end">945 px</text>
+  <text x="375" y="31" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#0b7f82" text-anchor="middle">Squeezed stack: only this 53 px (5%) shows</text>
+  <text x="375" y="87" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#a86d08" text-anchor="middle">Normal stack: this 105 px (10%) strip shows</text>
+  <text x="375" y="979" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#a86d08" text-anchor="middle">Bottom-row piles stack upward: this edge shows there</text>
+  <text x="375" y="1032" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#0b7f82" text-anchor="middle">Same rules at the bottom</text>
+
+  <!-- Appearance swatch: centre circle, full card width -->
+  <circle cx="375" cy="525" r="373.5" fill="#8a5cf0" fill-opacity="0.05" stroke="#8a5cf0" stroke-width="3" stroke-dasharray="10 8"/>
+  <line x1="355" y1="525" x2="395" y2="525" stroke="#8a5cf0" stroke-width="2"/>
+  <line x1="375" y1="505" x2="375" y2="545" stroke="#8a5cf0" stroke-width="2"/>
+
+  <!-- Safe margin and app-rounded corners -->
+  <rect x="38" y="38" width="674" height="974" rx="30" fill="none" stroke="#5b5b5b" stroke-opacity="0.45" stroke-width="2" stroke-dasharray="4 8"/>
+  <rect x="1.5" y="1.5" width="747" height="1047" rx="68" fill="none" stroke="#d4d4d4" stroke-width="3"/>
+
+  <!-- Notes -->
+  <text x="375" y="375" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="34" font-weight="700" fill="#5b5b5b" text-anchor="middle">Card back</text>
+  <text x="375" y="417" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="20" font-weight="500" fill="#5b5b5b" text-anchor="middle">The whole back shows on the stock pile and while dealing.</text>
+  <text x="375" y="445" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="20" font-weight="500" fill="#5b5b5b" text-anchor="middle">Make the top and bottom strips recognisable on their own:</text>
+  <text x="375" y="473" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="20" font-weight="500" fill="#5b5b5b" text-anchor="middle">a stack of face-down cards shows only those slices.</text>
+  <text x="375" y="595" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#6a3fd0" text-anchor="middle">Violet circle: the Appearance menu swatch (centre crop).</text>
+  <text x="375" y="623" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="20" font-weight="500" fill="#5b5b5b" text-anchor="middle">Corners are rounded by the app: run the art to the edges.</text>
+  <text x="375" y="651" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="20" font-weight="500" fill="#5b5b5b" text-anchor="middle">Both edges show in stacks, so make both look good.</text>
+  <text x="375" y="697" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#5b5b5b" text-anchor="middle">750 × 1050 px · art/card-backs/&lt;name&gt;/back.png</text></svg>
