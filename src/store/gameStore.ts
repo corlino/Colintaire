@@ -39,6 +39,7 @@ export interface GameStore {
   resetBalance(): void;
   setTheme(id: string): void;
   setCardBack(id: string): void;
+  setCardFace(id: string): void;
   openModal(name: ModalName): void;
   closeModal(): void;
   setPaused(reason: PauseReason, paused: boolean): void;
@@ -104,6 +105,9 @@ export const useGameStore = create<GameStore>()((set, get) => {
     },
     setCardBack(id) {
       set((s) => ({ settings: { ...s.settings, cardBackId: id } }));
+    },
+    setCardFace(id) {
+      set((s) => ({ settings: { ...s.settings, cardFaceId: id } }));
     },
     openModal(name) {
       set((s) => {

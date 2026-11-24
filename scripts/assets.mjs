@@ -3,7 +3,7 @@
  *
  *   art/themes/<id>/background.png        → public/art/themes/<id>/background.webp
  *   art/themes/<id>/background-wide.png   → public/art/themes/<id>/background-wide.webp   (optional)
- *   art/card-backs/<id>/back.png          → public/art/card-backs/<id>/back.webp
+ *   art/card-backs/<id>/back.png          → public/art/card-backs/<id>/back.webp   (or the folder's only PNG)
  *   art/card-faces/<set>/S01.png … D13.png → public/art/card-faces/<set>/S01.webp …   (all 52 required)
  *   art/brand/logo-<name>.png             → public/art/brand/logo-<name>.webp  (trimmed, transparent, 256 px tall)
  *   art/icons/icon-1024.png               → public/icons/*.png   (placeholder from the card back otherwise)
@@ -36,6 +36,13 @@ const subdirs = (dir) =>
         .map((d) => d.name)
         .sort()
     : [];
+
+/** back.png, or the folder's only PNG whatever its name. */
+function backSource(dir) {
+  if (existsSync(join(dir, 'back.png'))) return join(dir, 'back.png');
+  const pngs = readdirSync(dir).filter((f) => f.toLowerCase().endsWith('.png'));
+  return pngs.length === 1 ? join(dir, pngs[0]) : null;
+}
 
 async function webp(src, dest, resize, quality = 82) {
   await sharp(src).rotate().resize({ ...resize, fit: 'cover', position: 'centre' }).webp({ quality }).toFile(dest);
@@ -72,8 +79,8 @@ export async function buildAssets({ artDir = 'art', publicDir = 'public', manife
   }
 
   for (const id of subdirs(join(artDir, 'card-backs'))) {
-    const src = join(artDir, 'card-backs', id, 'back.png');
-    if (!existsSync(src)) continue;
+    const src = backSource(join(artDir, 'card-backs', id));
+    if (!src) continue;
     const dir = join(artOut, 'card-backs', id);
     mkdirSync(dir, { recursive: true });
     await checkSize(src, { width: 750, height: 1050 }, warnings);

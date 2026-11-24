@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { newGame } from '../../src/engine';
 import { computeMetrics } from '../../src/layout';
 import { useGameStore } from '../../src/store/gameStore';
-import { CARD_BACKS, THEMES } from '../../src/assets/registry';
+import { CARD_BACKS, CARD_FACES, THEMES } from '../../src/assets/registry';
 import { App } from '../../src/ui/App';
 import { Board } from '../../src/ui/Board';
 import { formatTime, formatVegas } from '../../src/ui/format';
@@ -96,11 +96,28 @@ describe('New Game modal (PRD 6.3, Style Guide 7.3)', () => {
 });
 
 describe('Appearance modal (PRD 7.3, Style Guide 7.2)', () => {
-  it('shows exactly one selected option per collection in Phase 1', () => {
+  it('lists every theme, card back and face set, with exactly one selected in each', () => {
     render(<AppearanceModal />);
-    const radios = screen.getAllByRole('radio');
-    expect(radios).toHaveLength(2);
-    for (const r of radios) expect(r).toHaveAttribute('aria-checked', 'true');
+    const groups: [string, readonly { name: string }[]][] = [
+      ['Interface Theme', THEMES],
+      ['Card Style', CARD_BACKS],
+      ['Card Faces', CARD_FACES],
+    ];
+    for (const [name, list] of groups) {
+      const radios = within(screen.getByRole('radiogroup', { name })).getAllByRole('radio');
+      expect(radios.map((r) => r.getAttribute('aria-label'))).toEqual(list.map((a) => a.name));
+      expect(radios.filter((r) => r.getAttribute('aria-checked') === 'true')).toHaveLength(1);
+    }
+  });
+
+  it('switches the card faces immediately and leaves the game alone (AC 27)', () => {
+    const game = store().session.game;
+    render(<AppearanceModal />);
+    const last = CARD_FACES.at(-1)!;
+    fireEvent.click(screen.getByRole('radio', { name: last.name }));
+    expect(store().settings.cardFaceId).toBe(last.id);
+    expect(screen.getByRole('radio', { name: last.name })).toHaveAttribute('aria-checked', 'true');
+    expect(store().session.game).toBe(game);
   });
 });
 

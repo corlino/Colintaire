@@ -1,5 +1,7 @@
-import { CARD_BACKS, DEFAULTS, pick, THEMES } from '../../assets/registry';
+import { CARD_BACKS, CARD_FACES, DEFAULTS, pick, THEMES } from '../../assets/registry';
+import type { Card } from '../../engine';
 import { useGameStore } from '../../store/gameStore';
+import { CardFace, type CardSize } from '../CardView';
 import { CroppedPreview, PREVIEW_ASPECT } from '../CroppedPreview';
 import { ModalShell } from './ModalShell';
 
@@ -21,15 +23,20 @@ function Swatch({ label, selected, onSelect, children }: { label: string; select
   );
 }
 
+/** Face sets are previewed by their Ace of Spades, drawn the same way the board draws it. */
+const PREVIEW_CARD: Card = { id: 'S01', suit: 'S', rank: 1, faceUp: true };
+const PREVIEW_SIZE: CardSize = { w: 58, h: 81, radius: 0, rankFont: 13 };
+
 /**
  * Appearance (PRD 7.3). One row per registry; options apply immediately.
  * Phase 1 shows exactly one of each — unavailable options are never shown.
  */
 export function AppearanceModal() {
   const settings = useGameStore((s) => s.settings);
-  const { closeModal, setTheme, setCardBack } = useGameStore.getState();
+  const { closeModal, setTheme, setCardBack, setCardFace } = useGameStore.getState();
   const theme = pick(THEMES, settings.themeId, DEFAULTS.theme);
   const back = pick(CARD_BACKS, settings.cardBackId, DEFAULTS.back);
+  const faces = pick(CARD_FACES, settings.cardFaceId, DEFAULTS.face);
 
   return (
     <ModalShell title="Appearance" onClose={closeModal}>
@@ -49,6 +56,18 @@ export function AppearanceModal() {
           {CARD_BACKS.map((b) => (
             <Swatch key={b.id} label={b.name} selected={b.id === back.id} onSelect={() => setCardBack(b.id)}>
               <CroppedPreview aspect={PREVIEW_ASPECT.card} src={b.src} className="size-full" />
+            </Swatch>
+          ))}
+        </div>
+      </section>
+      <section className="mt-2xl flex flex-col items-center gap-lg" aria-label="Card Faces">
+        <h3 className="text-section">Card Faces</h3>
+        <div role="radiogroup" aria-label="Card Faces" className="flex flex-wrap justify-center gap-xl">
+          {CARD_FACES.map((f) => (
+            <Swatch key={f.id} label={f.name} selected={f.id === faces.id} onSelect={() => setCardFace(f.id)}>
+              <CroppedPreview aspect={PREVIEW_ASPECT.card} className="size-full">
+                <CardFace card={PREVIEW_CARD} size={PREVIEW_SIZE} backSrc={back.src} faces={f} />
+              </CroppedPreview>
             </Swatch>
           ))}
         </div>

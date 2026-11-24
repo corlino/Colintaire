@@ -9,9 +9,21 @@ export const PREVIEW_ASPECT = {
 /**
  * A round preview that keeps the art's own proportions and crops it to the
  * circle (centre crop), rather than squeezing it into a square.
- * Pass `src` for an image, or `background` for a CSS background.
+ * Pass `src` for an image, `background` for a CSS background, or children to draw inside the shape.
  */
-export function CroppedPreview({ aspect, src, background, className = '' }: { aspect: number; src?: string; background?: string; className?: string }) {
+export function CroppedPreview({
+  aspect,
+  src,
+  background,
+  className = '',
+  children,
+}: {
+  aspect: number;
+  src?: string;
+  background?: string;
+  className?: string;
+  children?: React.ReactNode;
+}) {
   const portrait = aspect <= 1;
   const inner: React.CSSProperties = {
     position: 'absolute',
@@ -26,7 +38,7 @@ export function CroppedPreview({ aspect, src, background, className = '' }: { as
       {src ? (
         <img src={src} alt="" draggable={false} style={{ ...inner, objectFit: 'fill' }} />
       ) : (
-        <span style={{ ...inner, background }} />
+        <span style={{ ...inner, background }}>{children}</span>
       )}
     </span>
   );

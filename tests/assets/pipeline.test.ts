@@ -15,12 +15,13 @@ let result: Awaited<ReturnType<typeof buildAssets>>;
 beforeAll(async () => {
   root = mkdtempSync(join(tmpdir(), 'colintaire-assets-'));
   const art = join(root, 'art');
-  const dirs = ['themes/nebula-dusk', 'themes/deep-sea', 'card-backs/teal-geometric', 'card-faces/partial', 'brand', 'icons'];
+  const dirs = ['themes/nebula-dusk', 'themes/deep-sea', 'card-backs/teal-geometric', 'card-backs/odd-name', 'card-faces/partial', 'brand', 'icons'];
   for (const d of dirs) mkdirSync(join(art, d), { recursive: true });
   await png(join(art, 'themes/nebula-dusk/background.png'), 1290, 2796);
   await png(join(art, 'themes/nebula-dusk/background-wide.png'), 2560, 1440);
   await png(join(art, 'themes/deep-sea/background.png'), 800, 1200); // wrong size → warning, still built
   await png(join(art, 'card-backs/teal-geometric/back.png'), 750, 1050);
+  await png(join(art, 'card-backs/odd-name/My Back Art.png'), 750, 1050); // only PNG in the folder → used
   await png(join(art, 'card-faces/partial/S01.png'), 750, 1050); // 1 of 52 → skipped
   // A 100×100 transparent canvas with a 40×60 mark made of two bars (a transparent gap between, like a real logo).
   const bar = { create: { width: 40, height: 25, channels: 4 as const, background: '#cccccc' } };
@@ -62,7 +63,10 @@ describe('npm run assets (TAD §12.5)', () => {
       background: '/art/themes/nebula-dusk/background.webp',
       backgroundWide: '/art/themes/nebula-dusk/background-wide.webp',
     });
-    expect(result.manifest.cardBacks).toEqual({ 'teal-geometric': '/art/card-backs/teal-geometric/back.webp' });
+    expect(result.manifest.cardBacks).toEqual({
+      'odd-name': '/art/card-backs/odd-name/back.webp',
+      'teal-geometric': '/art/card-backs/teal-geometric/back.webp',
+    });
     expect(result.manifest.cardFaces).toEqual({});
     expect(result.manifest.brand).toEqual({ silver: { src: '/art/brand/logo-silver.webp', aspect: 0.667 } });
     expect(result.warnings.some((w) => w.includes('deep-sea') && w.includes('800×1200'))).toBe(true);
