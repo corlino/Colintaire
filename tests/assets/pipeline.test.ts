@@ -15,13 +15,15 @@ let result: Awaited<ReturnType<typeof buildAssets>>;
 beforeAll(async () => {
   root = mkdtempSync(join(tmpdir(), 'colintaire-assets-'));
   const art = join(root, 'art');
-  const dirs = ['themes/nebula-dusk', 'themes/deep-sea', 'card-backs/teal-geometric', 'card-backs/odd-name', 'card-faces/partial', 'brand', 'icons'];
+  const dirs = ['themes/nebula-dusk', 'themes/deep-sea', 'themes/photo', 'card-backs/teal-geometric', 'card-backs/odd-name', 'card-faces/partial', 'brand', 'icons'];
   for (const d of dirs) mkdirSync(join(art, d), { recursive: true });
   await png(join(art, 'themes/nebula-dusk/background.png'), 1290, 2796);
   await png(join(art, 'themes/nebula-dusk/background-wide.png'), 2560, 1440);
   await png(join(art, 'themes/deep-sea/background.png'), 800, 1200); // wrong size → warning, still built
   await png(join(art, 'card-backs/teal-geometric/back.png'), 750, 1050);
-  await png(join(art, 'card-backs/odd-name/My Back Art.png'), 750, 1050); // only PNG in the folder → used
+  await png(join(art, 'card-backs/odd-name/My Back Art.png'), 750, 1050); // only image in the folder → used
+  // A bright, oddly named JPEG: used as the background and given a darker scrim.
+  await sharp({ create: { width: 1290, height: 2796, channels: 3, background: '#eeeeee' } }).jpeg().toFile(join(art, 'themes/photo/some-unsplash-name.jpg'));
   await png(join(art, 'card-faces/partial/S01.png'), 750, 1050); // 1 of 52 → skipped
   // A 100×100 transparent canvas with a 40×60 mark made of two bars (a transparent gap between, like a real logo).
   const bar = { create: { width: 40, height: 25, channels: 4 as const, background: '#cccccc' } };
@@ -63,6 +65,7 @@ describe('npm run assets (TAD §12.5)', () => {
       background: '/art/themes/nebula-dusk/background.webp',
       backgroundWide: '/art/themes/nebula-dusk/background-wide.webp',
     });
+    expect(result.manifest.themes['photo']).toEqual({ background: '/art/themes/photo/background.webp', scrim: 'rgba(0, 0, 0, 0.68)' });
     expect(result.manifest.cardBacks).toEqual({
       'odd-name': '/art/card-backs/odd-name/back.webp',
       'teal-geometric': '/art/card-backs/teal-geometric/back.webp',
@@ -75,12 +78,14 @@ describe('npm run assets (TAD §12.5)', () => {
   });
 
   it('swaps art into existing entries and adds new folders as options', () => {
-    const r = withArt({ themes: THEMES, backs: CARD_BACKS, faces: [] }, { ...result.manifest, cardFaces: { classic: { S01: '/x.webp' } } });
-    expect(r.themes.map((t) => t.name)).toEqual(['Nebula Dusk', 'Deep Sea']);
+    // Only the hand-written entries (they come first), so the owner's real art doesn't leak into the test.
+    const r = withArt({ themes: THEMES.slice(0, 1), backs: CARD_BACKS.slice(0, 1), faces: [] }, { ...result.manifest, cardFaces: { classic: { S01: '/x.webp' } } });
+    expect(r.themes.map((t) => t.name)).toEqual(['Nebula Dusk', 'Deep Sea', 'Photo']);
     expect(r.themes[0]!.background).toBe('url("/art/themes/nebula-dusk/background.webp")');
     expect(r.themes[0]!.backgroundWide).toBe('url("/art/themes/nebula-dusk/background-wide.webp")');
     expect(r.themes[0]!.preview).toBe('center / cover no-repeat url("/art/themes/nebula-dusk/background.webp")');
-    expect(r.themes[0]!.scrim).toBe(THEMES[0]!.scrim);
+    expect(r.themes[0]!.scrim).toBe(THEMES[0]!.scrim); // dark art keeps the default scrim
+    expect(r.themes[2]!.scrim).toBe('rgba(0, 0, 0, 0.68)');
     expect(r.backs[0]!.src).toBe('/art/card-backs/teal-geometric/back.webp');
     expect(r.faces[0]).toMatchObject({ id: 'classic', kind: 'images' });
     expect(titleFromId('teal_geometric-v2')).toBe('Teal Geometric V2');

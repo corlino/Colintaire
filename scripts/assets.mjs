@@ -1,9 +1,9 @@
 /**
  * npm run assets — turns the owner's PNGs in art/ into optimised files (TAD §12.5).
  *
- *   art/themes/<id>/background.png        → public/art/themes/<id>/background.webp
+ *   art/themes/<id>/background.png        → public/art/themes/<id>/background.webp       (or the folder's only image)
  *   art/themes/<id>/background-wide.png   → public/art/themes/<id>/background-wide.webp   (optional)
- *   art/card-backs/<id>/back.png          → public/art/card-backs/<id>/back.webp   (or the folder's only PNG)
+ *   art/card-backs/<id>/back.png          → public/art/card-backs/<id>/back.webp   (or the folder's only image)
  *   art/card-faces/<set>/S01.png … D13.png → public/art/card-faces/<set>/S01.webp …   (all 52 required)
  *   art/brand/logo-<name>.png             → public/art/brand/logo-<name>.webp  (trimmed, transparent, 256 px tall)
  *   art/icons/icon-1024.png               → public/icons/*.png   (placeholder from the card back otherwise)
@@ -37,11 +37,25 @@ const subdirs = (dir) =>
         .sort()
     : [];
 
-/** back.png, or the folder's only PNG whatever its name. */
-function backSource(dir) {
-  if (existsSync(join(dir, 'back.png'))) return join(dir, 'back.png');
-  const pngs = readdirSync(dir).filter((f) => f.toLowerCase().endsWith('.png'));
-  return pngs.length === 1 ? join(dir, pngs[0]) : null;
+const IMAGE = /\.(png|jpe?g|webp)$/i;
+
+/** The named file, or else the folder's only image (PNG, JPEG or WebP) whatever its name. */
+function soleImage(dir, preferred, exclude = []) {
+  if (existsSync(join(dir, preferred))) return join(dir, preferred);
+  const images = readdirSync(dir).filter((f) => IMAGE.test(f) && !exclude.includes(f.toLowerCase()));
+  return images.length === 1 ? join(dir, images[0]) : null;
+}
+
+/** Brightest average a background may show through its scrim, so white text and controls stay readable. */
+export const MAX_BG_LUMINANCE = 0.3;
+const DEFAULT_SCRIM_ALPHA = 0.25; // matches the registry default
+
+/** A darker scrim for a bright background (null when the default is enough). */
+async function scrimFor(file) {
+  const [r, g, b] = (await sharp(file).stats()).channels.map((c) => c.mean / 255);
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const alpha = 1 - MAX_BG_LUMINANCE / luminance;
+  return alpha > DEFAULT_SCRIM_ALPHA ? `rgba(0, 0, 0, ${Math.ceil(alpha * 100) / 100})` : null;
 }
 
 async function webp(src, dest, resize, quality = 82) {
@@ -61,13 +75,15 @@ export async function buildAssets({ artDir = 'art', publicDir = 'public', manife
   rmSync(artOut, { recursive: true, force: true }); // no stale files from removed art
 
   for (const id of subdirs(join(artDir, 'themes'))) {
-    const src = join(artDir, 'themes', id, 'background.png');
-    if (!existsSync(src)) continue;
+    const src = soleImage(join(artDir, 'themes', id), 'background.png', ['background-wide.png']);
+    if (!src) continue;
     const dir = join(artOut, 'themes', id);
     mkdirSync(dir, { recursive: true });
     await checkSize(src, SIZES.background, warnings);
     await webp(src, join(dir, 'background.webp'), SIZES.background, 78);
     const entry = { background: `/art/themes/${id}/background.webp` };
+    const scrim = await scrimFor(join(dir, 'background.webp'));
+    if (scrim) entry.scrim = scrim;
     const wide = join(artDir, 'themes', id, 'background-wide.png');
     if (existsSync(wide)) {
       await checkSize(wide, SIZES.backgroundWide, warnings);
@@ -79,7 +95,7 @@ export async function buildAssets({ artDir = 'art', publicDir = 'public', manife
   }
 
   for (const id of subdirs(join(artDir, 'card-backs'))) {
-    const src = backSource(join(artDir, 'card-backs', id));
+    const src = soleImage(join(artDir, 'card-backs', id), 'back.png');
     if (!src) continue;
     const dir = join(artOut, 'card-backs', id);
     mkdirSync(dir, { recursive: true });
@@ -128,6 +144,8 @@ export async function buildAssets({ artDir = 'art', publicDir = 'public', manife
 export interface GeneratedTheme {
   readonly background: string;
   readonly backgroundWide?: string;
+  /** Darker scrim, set when the background is bright. */
+  readonly scrim?: string;
 }
 
 export const GENERATED: {

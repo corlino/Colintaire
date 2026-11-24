@@ -2,6 +2,8 @@
 export interface GeneratedTheme {
   readonly background: string;
   readonly backgroundWide?: string;
+  /** Darker scrim, set when the background is bright. */
+  readonly scrim?: string;
 }
 
 export const GENERATED: {
@@ -11,7 +13,12 @@ export const GENERATED: {
   /** Brand marks by name (e.g. "silver"); aspect is width / height. */
   readonly brand: Readonly<Record<string, { readonly src: string; readonly aspect: number }>>;
 } = {
-  "themes": {},
+  "themes": {
+    "abstract-art": {
+      "background": "/art/themes/abstract-art/background.webp",
+      "scrim": "rgba(0, 0, 0, 0.59)"
+    }
+  },
   "cardBacks": {
     "entities-back": "/art/card-backs/entities-back/back.webp"
   },

@@ -84,7 +84,7 @@ export function withArt(
   const themeFrom = (id: string, g: GeneratedTheme, prev?: ThemeAsset): ThemeAsset => ({
     id,
     name: prev?.name ?? titleFromId(id),
-    scrim: prev?.scrim ?? DEFAULT_SCRIM,
+    scrim: g.scrim ?? prev?.scrim ?? DEFAULT_SCRIM,
     background: url(g.background),
     ...(g.backgroundWide ? { backgroundWide: url(g.backgroundWide) } : {}),
     preview: `center / cover no-repeat ${url(g.background)}`,
