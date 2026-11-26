@@ -120,7 +120,10 @@ export const CARD_BACKS: readonly CardBackAsset[] = registries.backs;
 export const CARD_FACES: readonly CardFaceSet[] = registries.faces;
 
 /** Brand mark shown either side of the header title (light version for the dark UI), if supplied. */
-export const HEADER_LOGO: { readonly src: string; readonly aspect: number } | undefined = GENERATED.brand['silver'];
+export const HEADER_LOGO: { readonly src: string; readonly aspect: number } | undefined = GENERATED.brand['logo-silver'];
+
+/** Mask shown on the Reshuffle pop-up (silver version for the dark UI), if supplied. */
+export const RESHUFFLE_MARK: { readonly src: string; readonly aspect: number } | undefined = GENERATED.brand['mask-silver'];
 
 export const DEFAULTS = { theme: 'nebula-dusk', back: 'teal-geometric', face: 'classic' } as const;
 

@@ -12,6 +12,8 @@ import { formatTime, formatVegas } from '../../src/ui/format';
 import { AppearanceModal } from '../../src/ui/modals/AppearanceModal';
 import { InspectView } from '../../src/ui/modals/InspectView';
 import { NewGameModal } from '../../src/ui/modals/NewGameModal';
+import { ReshuffleModal } from '../../src/ui/modals/ReshuffleModal';
+import { randomQuote, RESHUFFLE_QUOTES } from '../../src/ui/quotes';
 import { StatsPanel, statValueClass } from '../../src/ui/StatsPanel';
 import { cs, stateWith } from '../helpers';
 
@@ -139,6 +141,46 @@ describe('Board controls', () => {
     render(<Board metrics={computeMetrics(343, 560)} />);
     fireEvent.click(screen.getByRole('button', { name: 'Appearance' }));
     expect(store().activeModal).toBe('appearance');
+  });
+});
+
+describe('Reshuffle pop-up', () => {
+  it('the reshuffle button asks first instead of dealing', () => {
+    render(<Board metrics={computeMetrics(343, 560)} />);
+    const deal = store().dealId;
+    fireEvent.click(screen.getByRole('button', { name: 'Reshuffle' }));
+    expect(store().activeModal).toBe('reshuffle');
+    expect(store().dealId).toBe(deal);
+  });
+
+  it('shows a quote and its author; closing changes nothing, Confirm restarts', () => {
+    act(() => store().openModal('reshuffle'));
+    const deal = store().dealId;
+    render(<ReshuffleModal />);
+    const dialog = screen.getByRole('dialog', { name: 'Reshuffle' });
+    expect(RESHUFFLE_QUOTES.some((q) => within(dialog).queryByText(q.author))).toBe(true);
+    expect(within(dialog).queryByText('Costs $52 to deal')).toBeNull(); // Classic: no note
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    expect(store().activeModal).toBeNull();
+    expect(store().dealId).toBe(deal);
+    cleanup();
+    act(() => store().openModal('reshuffle'));
+    render(<ReshuffleModal />);
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+    expect(store().dealId).toBe(deal + 1);
+    expect(store().activeModal).toBeNull();
+  });
+
+  it('notes the Vegas cost', () => {
+    act(() => store().startNewGame('vegas'));
+    render(<ReshuffleModal />);
+    expect(screen.getByText('Costs $52 to deal')).toBeInTheDocument();
+  });
+
+  it('picks any of the four quotes', () => {
+    expect(RESHUFFLE_QUOTES).toHaveLength(4);
+    expect(randomQuote(() => 0)).toBe(RESHUFFLE_QUOTES[0]);
+    expect(randomQuote(() => 0.99)).toBe(RESHUFFLE_QUOTES[3]);
   });
 });
 

@@ -29,5 +29,5 @@ export const SHARED_COLUMNS: readonly (readonly [number, number])[] = [
 
 /** Bottom-row positions of the non-pile elements. */
 export const BOTTOM_ROW = { controlsCol: 2, wasteCol: 3, stockCol: 4 } as const;
-/** The Appearance button takes the fifth column of the foundation row. */
-export const APPEARANCE_COL = 4;
+/** The Restart (reshuffle) button takes the fifth column of the foundation row. */
+export const RESTART_COL = 4;

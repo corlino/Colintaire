@@ -8,6 +8,7 @@ import { RotateOverlay } from './RotateOverlay';
 import { AppearanceModal } from './modals/AppearanceModal';
 import { InspectView } from './modals/InspectView';
 import { NewGameModal } from './modals/NewGameModal';
+import { ReshuffleModal } from './modals/ReshuffleModal';
 import { WinModal } from './modals/WinModal';
 import { SHELL } from './shellSizes';
 import { StatsPanel } from './StatsPanel';
@@ -110,6 +111,7 @@ export function App() {
         {activeModal === 'appearance' && <AppearanceModal key="appearance" />}
         {activeModal === 'win' && <WinModal key="win" />}
         {activeModal === 'inspect' && <InspectView key="inspect" />}
+        {activeModal === 'reshuffle' && <ReshuffleModal key="reshuffle" />}
       </AnimatePresence>
       <RotateOverlay />
     </div>

@@ -17,7 +17,7 @@ export interface Settings {
   readonly lastMode: GameMode;
 }
 
-export type ModalName = 'appearance' | 'newGame' | 'win' | 'inspect';
+export type ModalName = 'appearance' | 'newGame' | 'win' | 'inspect' | 'reshuffle';
 
 /** Delay before the win modal appears after the last foundation move (TAD §11.2). */
 export const WIN_MODAL_DELAY = 400;

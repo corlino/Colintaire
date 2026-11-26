@@ -16,10 +16,13 @@ export function statValueClass(value: string): string {
 function Stat({ label, icon: Icon, value }: { label: string; icon: ComponentType<SVGProps<SVGSVGElement>>; value: string }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col justify-center rounded-sm bg-black px-sm min-[400px]:px-md" role="group" aria-label={`${label} ${value}`}>
-      <span className="text-stat-label leading-tight">{label}</span>
-      <span className="flex h-6 items-center gap-xs leading-tight">
+      {/* The icon trails the label (owner reference); the value has the second line to itself. */}
+      <span className="flex items-center gap-xs leading-tight">
+        <span className="text-stat-label">{label}</span>
         <Icon className="size-4.5 shrink-0 text-text-secondary" strokeWidth={1.5} aria-hidden="true" />
-        <span className={`${statValueClass(value)} truncate`}>{value}</span>
+      </span>
+      <span className={`flex h-6 items-center leading-tight ${statValueClass(value)}`}>
+        <span className="truncate">{value}</span>
       </span>
     </div>
   );

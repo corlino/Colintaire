@@ -132,7 +132,7 @@ describe('no-overlap guarantee (U19)', () => {
           const tab = (p: number) => layout.cards.filter((c) => c.pile.kind === 'tableau' && c.pile.index === p);
           const topRow = [0, 1, 2, 3, 4].flatMap(tab);
           const bottomRow = [5, 6].flatMap(tab);
-          const bottomFixed = [layout.slots.waste, layout.slots.stock, layout.slots.undo, layout.slots.restart];
+          const bottomFixed = [layout.slots.waste, layout.slots.stock, layout.slots.undo, layout.slots.appearance];
 
           for (const a of topRow) {
             for (const b of bottomRow) expect(overlaps(rectOf(a), rectOf(b))).toBe(false);

@@ -6,7 +6,7 @@
  *   art/card-backs/<id>/back.png          → public/art/card-backs/<id>/back.webp   (or the folder's only image)
  *   art/card-faces/<set>/S01.png … D13.png → public/art/card-faces/<set>/S01.webp …   (all 52 required)
  *   Backs and faces also get a full-size copy in …/large/ for the inspect view (not precached).
- *   art/brand/logo-<name>.png             → public/art/brand/logo-<name>.webp  (trimmed, transparent, 256 px tall)
+ *   art/brand/<name>.png                  → public/art/brand/<name>.webp  (trimmed, transparent, 256 px tall; e.g. logo-silver, mask-silver)
  *   art/icons/icon-1024.png               → public/icons/*.png   (placeholder from the card back otherwise)
  *
  * It also writes src/assets/generated.ts, which the registry reads: a theme or
@@ -136,15 +136,15 @@ export async function buildAssets({ artDir = 'art', publicDir = 'public', manife
   // Brand marks: transparent PNGs, trimmed to the artwork so the UI controls the spacing.
   const brandDir = join(artDir, 'brand');
   if (existsSync(brandDir)) {
-    for (const file of readdirSync(brandDir).filter((f) => /^logo-[a-z0-9-]+\.png$/.test(f)).sort()) {
-      const name = file.slice('logo-'.length, -'.png'.length);
+    for (const file of readdirSync(brandDir).filter((f) => /^[a-z0-9-]+\.png$/.test(f)).sort()) {
+      const name = file.slice(0, -'.png'.length);
       const dir = join(artOut, 'brand');
       mkdirSync(dir, { recursive: true });
       const trimmed = await sharp(join(brandDir, file)).trim().toBuffer();
-      await sharp(trimmed).resize({ height: SIZES.logoHeight }).webp({ quality: 90, alphaQuality: 100 }).toFile(join(dir, `logo-${name}.webp`));
+      await sharp(trimmed).resize({ height: SIZES.logoHeight }).webp({ quality: 90, alphaQuality: 100 }).toFile(join(dir, `${name}.webp`));
       const { width, height } = await sharp(trimmed).metadata();
-      out.brand[name] = { src: `/art/brand/logo-${name}.webp`, aspect: Math.round((width / height) * 1000) / 1000 };
-      log(`logo ${name}`);
+      out.brand[name] = { src: `/art/brand/${name}.webp`, aspect: Math.round((width / height) * 1000) / 1000 };
+      log(`brand ${name}`);
     }
   }
 

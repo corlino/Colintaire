@@ -87,7 +87,6 @@ export const Board = memo(function Board({ metrics }: { metrics: Metrics }) {
   const settings = useGameStore((s) => s.settings);
   const dealId = useGameStore((s) => s.dealId);
   const animateDeal = useGameStore((s) => s.animateDeal);
-  const restartGame = useGameStore((s) => s.restartGame);
   const dispatch = useGameStore((s) => s.dispatch);
   const board = game.board;
 
@@ -532,7 +531,7 @@ export const Board = memo(function Board({ metrics }: { metrics: Metrics }) {
         }}
         style={{ ...box(slots.undo), zIndex: 400 }}
       />
-      <ControlButton label="Restart" icon={ArrowPathIcon} onClick={restartGame} style={{ ...box(slots.restart), zIndex: 400 }} />
+      <ControlButton label="Reshuffle" icon={ArrowPathIcon} onClick={() => useGameStore.getState().openModal('reshuffle')} style={{ ...box(slots.restart), zIndex: 400 }} />
 
       {peekPile !== null && (
         <PeekPanel

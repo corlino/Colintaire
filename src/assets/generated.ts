@@ -20,6 +20,9 @@ export const GENERATED: {
     "abstract-art": {
       "background": "/art/themes/abstract-art/background.webp",
       "scrim": "rgba(0, 0, 0, 0.59)"
+    },
+    "my-painting": {
+      "background": "/art/themes/my-painting/background.webp"
     }
   },
   "cardBacks": {
@@ -141,13 +144,21 @@ export const GENERATED: {
     }
   },
   "brand": {
-    "dark": {
+    "logo-dark": {
       "src": "/art/brand/logo-dark.webp",
       "aspect": 0.86
     },
-    "silver": {
+    "logo-silver": {
       "src": "/art/brand/logo-silver.webp",
       "aspect": 0.86
+    },
+    "mask-dark": {
+      "src": "/art/brand/mask-dark.webp",
+      "aspect": 1.013
+    },
+    "mask-silver": {
+      "src": "/art/brand/mask-silver.webp",
+      "aspect": 1.013
     }
   }
 };

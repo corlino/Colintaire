@@ -6,7 +6,7 @@
 import type { Board, CardId, Pile, PileRef } from '../engine/types';
 import { fitStack, splitColumn, type StackShape } from './fan';
 import { STACK_GAP, type Metrics } from './metrics';
-import { APPEARANCE_COL, BOTTOM_ROW, SHARED_COLUMNS, SLOT_MAP, type Grow } from './slots';
+import { RESTART_COL, BOTTOM_ROW, SHARED_COLUMNS, SLOT_MAP, type Grow } from './slots';
 
 export interface Rect {
   readonly x: number;
@@ -87,8 +87,9 @@ export function computeLayout(board: Board, m: Metrics): LayoutResult {
     });
     targets.push({ ref: { kind: 'foundation', index: i }, rect: foundations[i] as Rect });
   });
-  const appearance: Rect = {
-    x: col(APPEARANCE_COL) + (cardW - m.button) / 2,
+  // Restart sits at the end of the foundation row (owner reference); Appearance is under Undo.
+  const restart: Rect = {
+    x: col(RESTART_COL) + (cardW - m.button) / 2,
     y: (cardH - m.button) / 2,
     w: m.button,
     h: m.button,
@@ -99,7 +100,7 @@ export function computeLayout(board: Board, m: Metrics): LayoutResult {
   const stock = cardRect(BOTTOM_ROW.stockCol, floor - cardH);
   const bx = col(BOTTOM_ROW.controlsCol) + (cardW - m.button) / 2;
   const undo: Rect = { x: bx, y: m.controlsTop, w: m.button, h: m.button };
-  const restart: Rect = { x: bx, y: floor - m.button, w: m.button, h: m.button };
+  const appearance: Rect = { x: bx, y: floor - m.button, w: m.button, h: m.button };
 
   for (const [name, pile, rect] of [
     ['waste', board.waste, waste],
