@@ -19,7 +19,7 @@ export const GENERATED: {
   "themes": {
     "abstract-art": {
       "background": "/art/themes/abstract-art/background.webp",
-      "scrim": "rgba(0, 0, 0, 0.59)"
+      "scrim": "rgba(0, 0, 0, 0.49)"
     },
     "my-painting": {
       "background": "/art/themes/my-painting/background.webp"
