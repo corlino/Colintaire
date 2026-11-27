@@ -84,18 +84,18 @@ export function App() {
         {/* With logos: logo · short line · title · short line · logo (owner reference). Without: lines fill the width. */}
         <header className="flex shrink-0 items-center gap-md" style={{ height: SHELL.header }}>
           {HEADER_LOGO && <HeaderLogo />}
-          <span className={HEADER_LOGO ? 'flex flex-1 items-center justify-center gap-md min-[400px]:gap-lg' : 'contents'}>
-            <span className={`h-px bg-divider ${HEADER_LOGO ? 'w-5 min-[400px]:w-6' : 'flex-1'}`} />
+          <span className={HEADER_LOGO ? 'flex flex-1 items-center justify-center gap-sm min-[360px]:gap-md min-[400px]:gap-lg' : 'contents'}>
+            <span className={`h-px bg-divider ${HEADER_LOGO ? 'w-3 min-[360px]:w-5 min-[400px]:w-6' : 'flex-1'}`} />
             {/* Tapping the title opens New Game (decision U2). */}
             <button
               type="button"
               onClick={() => openModal('newGame')}
-              aria-label="Solitaire — new game"
+              aria-label="Colintaire — new game"
               className="rounded-md px-xs focus-visible:outline-2 focus-visible:outline-white"
             >
-              <h1 className="text-title">Solitaire</h1>
+              <h1 className="text-title">Colintaire</h1>
             </button>
-            <span className={`h-px bg-divider ${HEADER_LOGO ? 'w-5 min-[400px]:w-6' : 'flex-1'}`} />
+            <span className={`h-px bg-divider ${HEADER_LOGO ? 'w-3 min-[360px]:w-5 min-[400px]:w-6' : 'flex-1'}`} />
           </span>
           {HEADER_LOGO && <HeaderLogo />}
         </header>

@@ -95,6 +95,10 @@
 @media (max-width: 379px) {
   .text-title { font-size: 26px; }
 }
+/* "COLINTAIRE" between two logos needs a little less on the narrowest phones (iPhone SE, 320 px). */
+@media (max-width: 359px) {
+  header .text-title { font-size: 22px; }
+}
 
 /* App shell + iOS touch hygiene (TAD §10.3) */
 html,

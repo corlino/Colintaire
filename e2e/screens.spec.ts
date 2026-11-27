@@ -26,7 +26,7 @@ test.describe('reference screens', () => {
   });
 
   test('New Game modal', async ({ page }) => {
-    await page.getByRole('button', { name: /Solitaire/ }).click();
+    await page.getByRole('button', { name: /Colintaire/ }).click();
     await page.waitForTimeout(500);
     await expect(page).toHaveScreenshot('new-game.png', { maxDiffPixelRatio: 0.01 });
   });

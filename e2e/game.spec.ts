@@ -136,7 +136,7 @@ test('peek opens a folded column and picks from the middle of the run (U19)', as
 
 test('New Game pauses the timer, and Vegas starts at −$52 (PRD 6.3, Style Guide 9.1)', async ({ page }) => {
   await page.waitForTimeout(1200);
-  await page.getByRole('button', { name: /Solitaire/ }).click();
+  await page.getByRole('button', { name: /Colintaire/ }).click();
   const dialog = page.getByRole('dialog', { name: 'New Game' });
   await expect(dialog).toBeVisible();
   const time = page.getByRole('group', { name: /^Time / });
@@ -152,7 +152,7 @@ test('New Game pauses the timer, and Vegas starts at −$52 (PRD 6.3, Style Guid
 
 test('closing New Game without confirming leaves the game unchanged (PRD 6.3)', async ({ page }) => {
   const before = await getState(page);
-  await page.getByRole('button', { name: /Solitaire/ }).click();
+  await page.getByRole('button', { name: /Colintaire/ }).click();
   await page.getByRole('dialog', { name: 'New Game' }).getByRole('radio', { name: 'Vegas' }).click();
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
@@ -187,7 +187,7 @@ test('Appearance opens over the game and closes without changing it (AC 27)', as
 });
 
 test('a reload keeps the game, the Vegas balance and the time (U12, U13)', async ({ page }) => {
-  await page.getByRole('button', { name: /Solitaire/ }).click();
+  await page.getByRole('button', { name: /Colintaire/ }).click();
   const dialog = page.getByRole('dialog', { name: 'New Game' });
   await dialog.getByRole('radio', { name: 'Vegas' }).click();
   await dialog.getByRole('button', { name: 'Confirm' }).click();
@@ -205,7 +205,7 @@ test('a reload keeps the game, the Vegas balance and the time (U12, U13)', async
   await expect(page.getByRole('group', { name: /^Time 0:0[1-9]/ })).toBeVisible();
 
   // The next New Game remembers Vegas (U17).
-  await page.getByRole('button', { name: /Solitaire/ }).click();
+  await page.getByRole('button', { name: /Colintaire/ }).click();
   await expect(page.getByRole('dialog', { name: 'New Game' }).getByRole('radio', { name: 'Vegas' })).toHaveAttribute('aria-checked', 'true');
 });
 
@@ -261,7 +261,7 @@ test('a selected card can be opened large, turned over and closed, and stays sel
 
 test('Trini mode: Reshuffle shuffles the tableau and the game carries on', async ({ page }) => {
   await page.waitForTimeout(1200);
-  await page.getByRole('button', { name: /Solitaire/ }).click();
+  await page.getByRole('button', { name: /Colintaire/ }).click();
   const newGameDialog = page.getByRole('dialog', { name: 'New Game' });
   await newGameDialog.getByRole('radio', { name: 'Trini' }).click();
   await expect(newGameDialog.getByText('lets Trini reshuffle when she gets stuck')).toBeVisible();
