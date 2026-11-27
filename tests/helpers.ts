@@ -76,6 +76,7 @@ export function legalActions(state: GameState): Action[] {
   if (board.stock.length > 0) actions.push({ type: 'DRAW' });
   else if (board.waste.length > 0) actions.push({ type: 'RECYCLE' });
   if (canUndo(state)) actions.push({ type: 'UNDO' });
+  if (state.mode === 'trini' && board.tableau.some((p) => p.length > 0)) actions.push({ type: 'RESHUFFLE', seed: state.moves });
 
   const sources: { ref: PileRef; length: number }[] = [
     { ref: W, length: board.waste.length },

@@ -81,6 +81,15 @@ describe('New Game modal (PRD 6.3, Style Guide 7.3)', () => {
     expect(store().activeModal).toBeNull();
   });
 
+  it('offers Trini as a third mode, with its note', () => {
+    render(<NewGameModal />);
+    expect(screen.getAllByRole('radio').map((r) => r.textContent)).toEqual(['Classic', 'Vegas', 'Trini']);
+    fireEvent.click(screen.getByRole('radio', { name: 'Trini' }));
+    expect(screen.getByText('Trini mode is like Classic mode, but lets Trini reshuffle when she gets stuck.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+    expect(store().session.game.mode).toBe('trini');
+  });
+
   it('resets the Vegas balance only after the confirm step (U14)', () => {
     act(() => {
       store().startNewGame('vegas');
@@ -175,6 +184,20 @@ describe('Reshuffle pop-up', () => {
     act(() => store().startNewGame('vegas'));
     render(<ReshuffleModal />);
     expect(screen.getByText('Costs $52 to deal')).toBeInTheDocument();
+  });
+
+  it('in Trini mode notes that only the tableau changes, and Confirm reshuffles without a new deal', () => {
+    act(() => store().startNewGame('trini'));
+    const deal = store().dealId;
+    const tableau = store().session.game.board.tableau;
+    act(() => store().openModal('reshuffle'));
+    render(<ReshuffleModal />);
+    expect(screen.getByText('Only cards in the tableau are affected')).toBeInTheDocument();
+    expect(screen.queryByText('Costs $52 to deal')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+    expect(store().dealId).toBe(deal);
+    expect(store().session.game.board.tableau).not.toEqual(tableau);
+    expect(store().activeModal).toBeNull();
   });
 
   it('picks any of the four quotes', () => {

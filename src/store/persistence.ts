@@ -100,7 +100,7 @@ export function save(storage: Storage | null, key: string, data: unknown): boole
 
 const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
 const isNum = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
-const isMode = (x: unknown): x is GameMode => x === 'classic' || x === 'vegas';
+const isMode = (x: unknown): x is GameMode => x === 'classic' || x === 'vegas' || x === 'trini';
 
 export const validateSettings: Validator<SavedSettings> = (d) => {
   if (!isObject(d)) return null;

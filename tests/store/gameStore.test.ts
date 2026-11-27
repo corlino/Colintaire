@@ -93,6 +93,25 @@ describe('new game, restart and win', () => {
     expect(vegasBalance(store().session)).toBe(-104);
   });
 
+  it('Trini reshuffle shuffles the tableau in place: same game, time keeps going, no new deal', () => {
+    store().startNewGame('trini');
+    expect(store().settings.lastMode).toBe('trini');
+    store().dispatch({ type: 'DRAW' });
+    vi.setSystemTime(10_000);
+    const before = store().session.game;
+    const deal = store().dealId;
+    store().openModal('reshuffle');
+    store().reshuffleTableau();
+    const after = store().session.game;
+    expect(store().activeModal).toBeNull();
+    expect(store().dealId).toBe(deal);
+    expect(after.seed).toBe(before.seed);
+    expect(after.moves).toBe(before.moves + 1);
+    expect(after.board.waste).toEqual(before.board.waste);
+    expect(after.board.tableau).not.toEqual(before.board.tableau);
+    expect(elapsed()).toBe(10_000);
+  });
+
   it('stops the timer on a win and opens the win modal after 400 ms', () => {
     let g = orderedStockState('classic');
     store().loadGame(g);

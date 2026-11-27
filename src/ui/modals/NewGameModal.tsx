@@ -10,6 +10,7 @@ function ModeSelector({ value, onChange }: { value: GameMode; onChange: (m: Game
   const options: { mode: GameMode; label: string }[] = [
     { mode: 'classic', label: 'Classic' },
     { mode: 'vegas', label: 'Vegas' },
+    { mode: 'trini', label: 'Trini' },
   ];
   return (
     <div role="radiogroup" aria-label="Game mode" className="flex rounded-lg bg-black p-xs">
@@ -54,6 +55,9 @@ export function NewGameModal() {
         <ModeSelector value={mode} onChange={setMode} />
       </div>
       {mode === 'vegas' && <p className="mt-md text-center text-text-secondary">Costs $52 to deal. Each card on a foundation pays $5.</p>}
+      {mode === 'trini' && (
+        <p className="mt-md text-center text-text-secondary">Trini mode is like Classic mode, but lets Trini reshuffle when she gets stuck.</p>
+      )}
       <button
         type="button"
         onClick={() => startNewGame(mode)}

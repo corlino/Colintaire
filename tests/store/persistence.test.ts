@@ -67,6 +67,13 @@ describe('records (TAD §14)', () => {
     expect(loaded.timer).toEqual({ accumulatedMs: 1234, startedAt: null });
   });
 
+  it('round-trips a reshuffled Trini game', () => {
+    const state = applyAction(newGame(9, 'trini'), { type: 'RESHUFFLE', seed: 3 });
+    if (!state.ok) throw new Error();
+    save(storage, KEYS.game, { state: state.state, timer: { accumulatedMs: 0, startedAt: null } });
+    expect(load(storage, KEYS.game, validateGame)!.state).toEqual(state.state);
+  });
+
   it('discards bad JSON, unknown schemas and games that break the invariants', () => {
     storage.setItem(KEYS.settings, '{nope');
     storage.setItem(KEYS.vegas, JSON.stringify({ v: 99, data: { settled: 5 } }));

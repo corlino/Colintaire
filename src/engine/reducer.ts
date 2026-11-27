@@ -4,6 +4,7 @@
  */
 import { withFace } from './cards';
 import { CLASSIC_POINTS, UNDO_LIMIT, VEGAS } from './constants';
+import { mulberry32, shuffle } from './rng';
 import { isLegalMove, pileAt } from './rules';
 import type { Action, Board, Card, GameEvent, GameState, Pile, PileRef, Result, Snapshot } from './types';
 
@@ -18,6 +19,8 @@ export function applyAction(state: GameState, action: Action): Result {
       return recycle(state);
     case 'UNDO':
       return undo(state);
+    case 'RESHUFFLE':
+      return reshuffle(state, action.seed);
   }
 }
 
@@ -177,5 +180,32 @@ function undo(state: GameState): Result {
       undo: { used: state.undo.used + 1, history: state.undo.history.slice(0, -1) },
     },
     events: [{ type: 'UNDONE' }],
+  };
+}
+
+/**
+ * Trini mode: gather every tableau card, shuffle, and deal them back so each pile keeps
+ * its size, with only the top card face up. Stock, waste and foundations are untouched.
+ * It counts as a move and scores nothing. It cannot be undone, and it clears the undo
+ * history so earlier moves can't be undone past it (owner decision); undos already used stay used.
+ */
+function reshuffle(state: GameState, seed: number): Result {
+  if (state.mode !== 'trini') return { ok: false, error: 'WRONG_MODE' };
+  const cards = state.board.tableau.flat();
+  if (cards.length === 0) return { ok: false, error: 'EMPTY_TABLEAU' };
+  const deck = shuffle([...cards], mulberry32(seed));
+  let next = 0;
+  const tableau = state.board.tableau.map((pile) =>
+    pile.map((_, i) => withFace(deck[next++] as Card, i === pile.length - 1)),
+  ) as unknown as Board['tableau'];
+  return {
+    ok: true,
+    state: {
+      ...state,
+      board: { ...state.board, tableau },
+      moves: state.moves + 1,
+      undo: { used: state.undo.used, history: [] },
+    },
+    events: [{ type: 'RESHUFFLED' }],
   };
 }

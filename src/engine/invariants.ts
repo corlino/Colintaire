@@ -52,7 +52,7 @@ export function assertInvariants(state: GameState): void {
   if (paid.size !== state.vegas.everPaid.length) fail('duplicate everPaid');
   if (new Set(state.vegas.credited).size !== state.vegas.credited.length) fail('duplicate credited');
   for (const id of state.vegas.credited) if (!paid.has(id)) fail('credited card never paid');
-  if (state.mode === 'classic' && state.vegas.everPaid.length > 0) fail('payout in classic mode');
+  if (state.mode !== 'vegas' && state.vegas.everPaid.length > 0) fail(`payout in ${state.mode} mode`);
 
   const won = board.foundations.every((f) => f.length === 13);
   if (won !== (state.status === 'won')) fail('status does not match foundations');

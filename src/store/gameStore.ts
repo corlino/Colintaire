@@ -38,6 +38,8 @@ export interface GameStore {
   dispatch(action: Action): Result;
   startNewGame(mode: GameMode): void;
   restartGame(): void;
+  /** Trini mode: shuffle the tableau in place (no restart, no undo) and close the pop-up. */
+  reshuffleTableau(): void;
   resetBalance(): void;
   setTheme(id: string): void;
   setCardBack(id: string): void;
@@ -101,6 +103,10 @@ export const useGameStore = create<GameStore>()((set, get) => {
     },
     restartGame() {
       deal(restart(get().session, randomSeed()));
+    },
+    reshuffleTableau() {
+      get().dispatch({ type: 'RESHUFFLE', seed: randomSeed() });
+      get().closeModal();
     },
     resetBalance() {
       set((s) => ({ session: resetVegasBalance(s.session) }));

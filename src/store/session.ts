@@ -40,8 +40,9 @@ export function confirmNewGame(session: Session, mode: GameMode, seed: number): 
  * Vegas is a new game with a fresh deal and another $52 buy-in (FR-20).
  */
 export function restart(session: Session, freshSeed: number): Session {
-  if (session.game.mode === 'classic') {
-    return { ledger: session.ledger, game: newGame(session.game.seed, 'classic') };
+  if (session.game.mode !== 'vegas') {
+    // Classic (and Trini, whose button reshuffles instead) replay the same deal.
+    return { ledger: session.ledger, game: newGame(session.game.seed, session.game.mode) };
   }
   return { ledger: settle(session), game: newGame(freshSeed, 'vegas') };
 }

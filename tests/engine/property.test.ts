@@ -21,7 +21,7 @@ describe('engine properties', () => {
     fc.assert(
       fc.property(
         fc.integer({ min: 0, max: 0xffffffff }),
-        fc.constantFrom<GameMode>('classic', 'vegas'),
+        fc.constantFrom<GameMode>('classic', 'vegas', 'trini'),
         fc.array(fc.nat(), { minLength: 50, maxLength: 500 }),
         (seed, mode, choices) => {
           let s = newGame(seed, mode);

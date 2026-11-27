@@ -10,7 +10,8 @@
 export type Suit = 'S' | 'H' | 'C' | 'D';
 export type Rank = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
 export type Color = 'red' | 'black';
-export type GameMode = 'classic' | 'vegas';
+/** Trini plays like Classic but allows unlimited tableau reshuffles (owner request). */
+export type GameMode = 'classic' | 'vegas' | 'trini';
 
 /** Stable, unique identity per card, e.g. "S01" (Ace of spades) or "D13" (King of diamonds). */
 export type CardId = string;
@@ -80,7 +81,9 @@ export type Action =
   | { readonly type: 'MOVE'; readonly from: PileRef; readonly cardIndex: number; readonly to: PileRef }
   | { readonly type: 'DRAW' }
   | { readonly type: 'RECYCLE' }
-  | { readonly type: 'UNDO' };
+  | { readonly type: 'UNDO' }
+  /** Trini only: shuffle the tableau cards with this seed and deal them back into the same pile sizes. */
+  | { readonly type: 'RESHUFFLE'; readonly seed: number };
 
 export type GameEvent =
   | { readonly type: 'MOVED'; readonly cardIds: readonly CardId[]; readonly from: PileRef; readonly to: PileRef }
@@ -89,6 +92,7 @@ export type GameEvent =
   | { readonly type: 'FLIP'; readonly cardId: CardId; readonly pile: number }
   | { readonly type: 'PAYOUT'; readonly cardId: CardId; readonly amount: number }
   | { readonly type: 'UNDONE' }
+  | { readonly type: 'RESHUFFLED' }
   | { readonly type: 'WON' };
 
 export type ActionError =
@@ -97,7 +101,9 @@ export type ActionError =
   | 'EMPTY_STOCK'
   | 'STOCK_NOT_EMPTY'
   | 'EMPTY_WASTE'
-  | 'NO_UNDO';
+  | 'NO_UNDO'
+  | 'WRONG_MODE'
+  | 'EMPTY_TABLEAU';
 
 export type Result =
   | { readonly ok: true; readonly state: GameState; readonly events: readonly GameEvent[] }

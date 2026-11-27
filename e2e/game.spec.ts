@@ -258,3 +258,30 @@ test('a selected card can be opened large, turned over and closed, and stays sel
   await page.mouse.click(target.x, target.y);
   await expect.poll(async () => (await getState(page)).board.tableau[0]!.map((c) => c.id)).toEqual(['S09', 'H08']);
 });
+
+test('Trini mode: Reshuffle shuffles the tableau and the game carries on', async ({ page }) => {
+  await page.waitForTimeout(1200);
+  await page.getByRole('button', { name: /Solitaire/ }).click();
+  const newGameDialog = page.getByRole('dialog', { name: 'New Game' });
+  await newGameDialog.getByRole('radio', { name: 'Trini' }).click();
+  await expect(newGameDialog.getByText('lets Trini reshuffle when she gets stuck')).toBeVisible();
+  await newGameDialog.getByRole('button', { name: 'Confirm' }).click();
+  await page.waitForTimeout(1000); // deal animation
+  await page.getByRole('button', { name: /^Stock/ }).press('Enter'); // draw: one move, so there is something to keep
+  const before = await getState(page);
+
+  await page.getByRole('button', { name: 'Reshuffle' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Reshuffle' });
+  await expect(dialog.getByText('Only cards in the tableau are affected')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Confirm' }).click();
+  await expect(dialog).toBeHidden();
+
+  const after = await getState(page);
+  expect(after.mode).toBe('trini');
+  expect(after.seed).toBe(before.seed);
+  expect(after.moves).toBe(before.moves + 1);
+  expect(after.board.waste).toEqual(before.board.waste);
+  expect(after.board.tableau.map((p) => p.length)).toEqual(before.board.tableau.map((p) => p.length));
+  expect(after.board.tableau).not.toEqual(before.board.tableau);
+  await expect(page.getByRole('button', { name: 'Undo' })).toBeDisabled();
+});
