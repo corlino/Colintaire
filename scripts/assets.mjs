@@ -6,6 +6,7 @@
  *   art/card-backs/<id>/back.png          → public/art/card-backs/<id>/back.webp   (or the folder's only image)
  *   art/card-faces/<set>/S01.png … D13.png → public/art/card-faces/<set>/S01.webp …   (all 52 required)
  *   Backs and faces also get a full-size copy in …/large/ for the inspect view (not precached).
+ *   Its URL carries ?v=<content hash>, so new art gets a new URL and never comes from an old cache.
  *   art/brand/<name>.png                  → public/art/brand/<name>.webp  (trimmed, transparent, 256 px tall; e.g. logo-silver, mask-silver)
  *   art/icons/icon-1024.png               → public/icons/*.png   (placeholder from the card back otherwise)
  *
@@ -13,10 +14,14 @@
  * card back that has art uses it, and a new folder appears in Appearance on its own.
  * Never put raw PNGs straight into public/.
  */
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+
+/** `url?v=<first 8 hex of the file's SHA-256>`: changes whenever the image does. */
+const versioned = (url, file) => `${url}?v=${createHash('sha256').update(readFileSync(file)).digest('hex').slice(0, 8)}`;
 
 const BG = '#101010';
 const SUITS = ['S', 'H', 'C', 'D'];
@@ -107,7 +112,7 @@ export async function buildAssets({ artDir = 'art', publicDir = 'public', manife
     mkdirSync(join(dir, 'large'), { recursive: true });
     await webp(src, join(dir, 'large', 'back.webp'), SIZES.cardLarge, 85);
     out.cardBacks[id] = `/art/card-backs/${id}/back.webp`;
-    out.cardBacksLarge[id] = `/art/card-backs/${id}/large/back.webp`;
+    out.cardBacksLarge[id] = versioned(`/art/card-backs/${id}/large/back.webp`, join(dir, 'large', 'back.webp'));
     log(`card back ${id}`);
   }
 
@@ -126,7 +131,7 @@ export async function buildAssets({ artDir = 'art', publicDir = 'public', manife
       await webp(join(srcDir, `${f}.png`), join(dir, `${f}.webp`), SIZES.card, 85);
       await webp(join(srcDir, `${f}.png`), join(dir, 'large', `${f}.webp`), SIZES.cardLarge, 85);
       images[f] = `/art/card-faces/${id}/${f}.webp`;
-      large[f] = `/art/card-faces/${id}/large/${f}.webp`;
+      large[f] = versioned(`/art/card-faces/${id}/large/${f}.webp`, join(dir, 'large', `${f}.webp`));
     }
     out.cardFaces[id] = images;
     out.cardFacesLarge[id] = large;

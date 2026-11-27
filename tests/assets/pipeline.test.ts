@@ -79,8 +79,9 @@ describe('npm run assets (TAD §12.5)', () => {
     });
     expect(Object.keys(result.manifest.cardFaces)).toEqual(['full']);
     expect(result.manifest.cardFaces['full']!['H12']).toBe('/art/card-faces/full/H12.webp');
-    expect(result.manifest.cardFacesLarge['full']!['H12']).toBe('/art/card-faces/full/large/H12.webp');
-    expect(result.manifest.cardBacksLarge['teal-geometric']).toBe('/art/card-backs/teal-geometric/large/back.webp');
+    // Full-size URLs carry a content hash, so changed art never comes from the old cache.
+    expect(result.manifest.cardFacesLarge['full']!['H12']).toMatch(/^\/art\/card-faces\/full\/large\/H12\.webp\?v=[0-9a-f]{8}$/);
+    expect(result.manifest.cardBacksLarge['teal-geometric']).toMatch(/^\/art\/card-backs\/teal-geometric\/large\/back\.webp\?v=[0-9a-f]{8}$/);
     expect(result.manifest.brand).toEqual({ 'logo-silver': { src: '/art/brand/logo-silver.webp', aspect: 0.667 } });
     expect(result.warnings.some((w) => w.includes('deep-sea') && w.includes('800×1200'))).toBe(true);
     expect(result.warnings.some((w) => w.includes('"partial"') && w.includes('51 of 52'))).toBe(true);
@@ -101,7 +102,7 @@ describe('npm run assets (TAD §12.5)', () => {
     expect(r.themes[0]!.scrim).toBe(THEMES[0]!.scrim); // dark art keeps the default scrim
     expect(r.themes[2]!.scrim).toBe('rgba(0, 0, 0, 0.68)');
     expect(r.backs[0]!.src).toBe('/art/card-backs/teal-geometric/back.webp');
-    expect(r.backs[0]!.srcLarge).toBe('/art/card-backs/teal-geometric/large/back.webp');
+    expect(r.backs[0]!.srcLarge).toBe(result.manifest.cardBacksLarge['teal-geometric']);
     expect(r.faces[0]).toMatchObject({ id: 'classic', kind: 'images', imagesLarge: { S01: '/large/x.webp' } });
     expect(titleFromId('teal_geometric-v2')).toBe('Teal Geometric V2');
   });
