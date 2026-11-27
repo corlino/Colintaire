@@ -48,8 +48,9 @@ export default defineConfig({
         globIgnores: ['**/art/**/large/**'],
         runtimeCaching: [
           {
+            // Show the cached copy at once, refresh it in the background, so replaced art shows up next time.
             urlPattern: /\/art\/.+\/large\/.+\.webp$/,
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: { cacheName: 'card-art-large', expiration: { maxEntries: 120 } },
           },
         ],
